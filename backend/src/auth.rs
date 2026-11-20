@@ -129,6 +129,7 @@ pub async fn create_session(
 #[derive(Debug, Clone)]
 pub struct AuthUser {
     pub id: Uuid,
+    pub session_id: Uuid,
     pub full_name: String,
     pub email: String,
     pub ip_address: String,
@@ -145,9 +146,9 @@ impl FromRequestParts<AppState> for AuthUser {
             .ok_or_else(|| ApiError::unauthorized("Sesión requerida. Inicia sesión para continuar."))?;
 
         let token_hash = hash_token(&token);
-        let row: Option<(Uuid, String, String)> = sqlx::query_as(
+        let row: Option<(Uuid, Uuid, String, String)> = sqlx::query_as(
             r#"
-            SELECT u.id, u.full_name, u.email
+            SELECT u.id, s.id, u.full_name, u.email
             FROM sessions s
             INNER JOIN users u ON u.id = s.user_id
             WHERE s.token_hash = $1 AND s.expires_at > NOW()
@@ -157,11 +158,12 @@ impl FromRequestParts<AppState> for AuthUser {
         .fetch_optional(&state.pool)
         .await?;
 
-        let (id, full_name, email) =
+        let (id, session_id, full_name, email) =
             row.ok_or_else(|| ApiError::unauthorized("Tu sesión expiró o es inválida."))?;
 
         Ok(AuthUser {
             id,
+            session_id,
             full_name,
             email,
             ip_address: extract_ip_from_headers(&parts.headers),

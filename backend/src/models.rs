@@ -187,6 +187,28 @@ pub struct LoginRequest {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct UpdateProfileRequest {
+    pub full_name: String,
+    pub email: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ChangePasswordRequest {
+    pub current_password: String,
+    pub new_password: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SessionDto {
+    pub id: Uuid,
+    pub ip_address: Option<String>,
+    pub user_agent: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    pub is_current: bool,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct OrgRequest {
     pub name: String,
     #[serde(default)]

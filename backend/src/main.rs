@@ -15,7 +15,7 @@ use axum::{
     http::{HeaderValue, Request, StatusCode, header},
     middleware::{self, Next},
     response::{Html, IntoResponse, Response},
-    routing::{get, patch, post, put},
+    routing::{delete, get, patch, post, put},
 };
 use sqlx::{PgPool, postgres::PgPoolOptions};
 use tokio::net::TcpListener;
@@ -141,7 +141,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/register", post(routes::register))
         .route("/login", post(routes::login))
         .route("/logout", post(routes::logout))
-        .route("/me", get(routes::me))
         .layer(middleware::from_fn_with_state(
             auth_limiter,
             rate_limit_middleware,
@@ -150,6 +149,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let api_routes = Router::new()
         .route("/health", get(routes::health))
         .nest("/auth", auth_routes)
+        .route("/auth/me", get(routes::me))
+        .route("/auth/profile", patch(routes::update_profile))
+        .route("/auth/password", post(routes::change_password))
+        .route(
+            "/auth/sessions",
+            get(routes::list_sessions).delete(routes::revoke_other_sessions),
+        )
+        .route("/auth/sessions/{session_id}", delete(routes::revoke_session))
         .route("/orgs", get(routes::list_orgs).post(routes::create_org))
         .route("/orgs/import", post(routes::import_org))
         .route(

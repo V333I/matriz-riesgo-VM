@@ -4,6 +4,7 @@ use axum::{
     http::{HeaderMap, StatusCode, header},
     response::IntoResponse,
 };
+use chrono::{DateTime, Utc};
 use serde_json::json;
 use uuid::Uuid;
 
@@ -15,9 +16,9 @@ use crate::{
         hash_token, require_org_role, verify_password, write_audit,
     },
     models::{
-        ApiError, AuditLogDto, ImportOrgPayload, LoginRequest, MAX_ORGS_PER_USER,
-        MAX_RISKS_PER_ORG, OrgDto, OrgRequest, RegisterRequest, RiskDto, RiskRow,
-        RiskUpsertRequest, UserDto, clean_text,
+        ApiError, AuditLogDto, ChangePasswordRequest, ImportOrgPayload, LoginRequest,
+        MAX_ORGS_PER_USER, MAX_RISKS_PER_ORG, OrgDto, OrgRequest, RegisterRequest, RiskDto,
+        RiskRow, RiskUpsertRequest, SessionDto, UpdateProfileRequest, UserDto, clean_text,
     },
     seed::insert_coopandes_risks,
 };
@@ -250,6 +251,222 @@ pub async fn me(
         "user": UserDto { id: user.id, full_name: user.full_name, email: user.email },
         "organizations": orgs
     })))
+}
+
+pub async fn update_profile(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(payload): Json<UpdateProfileRequest>,
+) -> Result<impl IntoResponse, ApiError> {
+    let full_name = clean_text(&payload.full_name, 120);
+    let email = clean_text(&payload.email, 255).to_lowercase();
+
+    if full_name.len() < 2 {
+        return Err(ApiError::bad_request(
+            "Ingresa tu nombre completo (mínimo 2 caracteres).",
+        ));
+    }
+    if !email.contains('@') || !email.contains('.') || email.len() < 5 {
+        return Err(ApiError::bad_request("Ingresa un correo electrónico válido."));
+    }
+
+    sqlx::query(
+        "UPDATE users SET full_name = $1, email = $2, updated_at = NOW() WHERE id = $3",
+    )
+    .bind(&full_name)
+    .bind(&email)
+    .bind(user.id)
+    .execute(&state.pool)
+    .await?;
+
+    let orgs = fetch_user_orgs(&state, user.id).await?;
+    write_audit(
+        &state.pool,
+        orgs.first().map(|o| o.id),
+        Some(user.id),
+        Some(&email),
+        "PROFILE_UPDATE",
+        "user",
+        Some(&user.id.to_string()),
+        Some(&user.ip_address),
+        json!({ "full_name": full_name, "email": email }),
+    )
+    .await;
+
+    Ok(Json(json!({
+        "user": UserDto { id: user.id, full_name, email }
+    })))
+}
+
+pub async fn change_password(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Json(payload): Json<ChangePasswordRequest>,
+) -> Result<impl IntoResponse, ApiError> {
+    if payload.new_password.len() < 10 || payload.new_password.len() > 128 {
+        return Err(ApiError::bad_request(
+            "La nueva contraseña debe tener entre 10 y 128 caracteres.",
+        ));
+    }
+    if payload.current_password == payload.new_password {
+        return Err(ApiError::bad_request(
+            "La nueva contraseña debe ser distinta a la contraseña actual.",
+        ));
+    }
+
+    let row: (String,) = sqlx::query_as("SELECT password_hash FROM users WHERE id = $1")
+        .bind(user.id)
+        .fetch_one(&state.pool)
+        .await?;
+
+    if !verify_password(&payload.current_password, &row.0) {
+        let orgs = fetch_user_orgs(&state, user.id).await?;
+        write_audit(
+            &state.pool,
+            orgs.first().map(|o| o.id),
+            Some(user.id),
+            Some(&user.email),
+            "PASSWORD_CHANGE_FAILED",
+            "user",
+            Some(&user.id.to_string()),
+            Some(&user.ip_address),
+            json!({ "reason": "invalid_current_password" }),
+        )
+        .await;
+        return Err(ApiError::unauthorized("La contraseña actual es incorrecta."));
+    }
+
+    let new_hash = hash_password(&payload.new_password)?;
+    sqlx::query("UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2")
+        .bind(&new_hash)
+        .bind(user.id)
+        .execute(&state.pool)
+        .await?;
+
+    // Revoke all other sessions for security when password changes
+    let revoked = sqlx::query("DELETE FROM sessions WHERE user_id = $1 AND id != $2")
+        .bind(user.id)
+        .bind(user.session_id)
+        .execute(&state.pool)
+        .await?
+        .rows_affected();
+
+    let orgs = fetch_user_orgs(&state, user.id).await?;
+    write_audit(
+        &state.pool,
+        orgs.first().map(|o| o.id),
+        Some(user.id),
+        Some(&user.email),
+        "PASSWORD_CHANGE",
+        "user",
+        Some(&user.id.to_string()),
+        Some(&user.ip_address),
+        json!({ "revoked_other_sessions": revoked }),
+    )
+    .await;
+
+    Ok(Json(json!({
+        "ok": true,
+        "revoked_other_sessions": revoked
+    })))
+}
+
+pub async fn list_sessions(
+    State(state): State<AppState>,
+    user: AuthUser,
+) -> Result<impl IntoResponse, ApiError> {
+    let rows: Vec<(Uuid, Option<String>, Option<String>, DateTime<Utc>, DateTime<Utc>)> =
+        sqlx::query_as(
+            r#"
+            SELECT id, ip_address, user_agent, created_at, expires_at
+            FROM sessions
+            WHERE user_id = $1 AND expires_at > NOW()
+            ORDER BY created_at DESC
+            "#,
+        )
+        .bind(user.id)
+        .fetch_all(&state.pool)
+        .await?;
+
+    let dtos: Vec<SessionDto> = rows
+        .into_iter()
+        .map(|(id, ip_address, user_agent, created_at, expires_at)| SessionDto {
+            id,
+            ip_address,
+            user_agent,
+            created_at,
+            expires_at,
+            is_current: id == user.session_id,
+        })
+        .collect();
+
+    Ok(Json(dtos))
+}
+
+pub async fn revoke_session(
+    State(state): State<AppState>,
+    user: AuthUser,
+    Path(session_id): Path<Uuid>,
+) -> Result<impl IntoResponse, ApiError> {
+    if session_id == user.session_id {
+        return Err(ApiError::bad_request(
+            "Para cerrar tu sesión actual utiliza la opción Cerrar Sesión.",
+        ));
+    }
+
+    let res = sqlx::query("DELETE FROM sessions WHERE id = $1 AND user_id = $2")
+        .bind(session_id)
+        .bind(user.id)
+        .execute(&state.pool)
+        .await?;
+
+    if res.rows_affected() == 0 {
+        return Err(ApiError::not_found("Sesión no encontrada."));
+    }
+
+    let orgs = fetch_user_orgs(&state, user.id).await?;
+    write_audit(
+        &state.pool,
+        orgs.first().map(|o| o.id),
+        Some(user.id),
+        Some(&user.email),
+        "SESSION_REVOKE",
+        "session",
+        Some(&session_id.to_string()),
+        Some(&user.ip_address),
+        json!({}),
+    )
+    .await;
+
+    Ok(Json(json!({ "ok": true })))
+}
+
+pub async fn revoke_other_sessions(
+    State(state): State<AppState>,
+    user: AuthUser,
+) -> Result<impl IntoResponse, ApiError> {
+    let revoked = sqlx::query("DELETE FROM sessions WHERE user_id = $1 AND id != $2")
+        .bind(user.id)
+        .bind(user.session_id)
+        .execute(&state.pool)
+        .await?
+        .rows_affected();
+
+    let orgs = fetch_user_orgs(&state, user.id).await?;
+    write_audit(
+        &state.pool,
+        orgs.first().map(|o| o.id),
+        Some(user.id),
+        Some(&user.email),
+        "SESSIONS_REVOKE_OTHERS",
+        "session",
+        None,
+        Some(&user.ip_address),
+        json!({ "revoked_count": revoked }),
+    )
+    .await;
+
+    Ok(Json(json!({ "ok": true, "revoked": revoked })))
 }
 
 pub async fn list_orgs(
