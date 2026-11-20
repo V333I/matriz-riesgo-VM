@@ -1564,14 +1564,14 @@
   </main>
 
   <footer>
-    AndesShield · Sistema Web Estático de Matriz de Riesgos (Single-File HTML/CSS/JS, sin librerías externas) · Caso CoopAndes Digital · Víctor Manzano · Diseño de Arquitectura de Redes Seguras
+    AndesShield · Plataforma de Gestión de Riesgos de Ciberseguridad (Zero-Dependency Single-File Web App) · Desarrollado por Víctor Manzano
   </footer>
 
   <!-- MODAL: ESCALA DE REFERENCIA -->
   <div class="modal-backdrop" id="modal-scale" role="dialog" aria-modal="true" aria-labelledby="modal-scale-title">
     <div class="modal">
       <div class="modal-header">
-        <h3 id="modal-scale-title">Escala Oficial de Referencia (Guía Didáctica: Cálculo de Riesgos)</h3>
+        <h3 id="modal-scale-title">Escala de Referencia — Cálculo de Riesgos (5×5)</h3>
         <button type="button" class="btn-sm" data-close-modal="modal-scale">Cerrar ✕</button>
       </div>
       <table class="qa-table">
@@ -1617,7 +1617,7 @@
         <button type="button" class="btn-sm" data-close-modal="modal-qa">Cerrar ✕</button>
       </div>
       <p style="font-size:0.84rem; color:var(--text-secondary);">
-        Verificación directa sobre la función <code>clasificarRiesgo(P, I)</code> del sistema frente a los 5 casos exigidos en la guía de actividad:
+        Verificación automatizada sobre la función <code>clasificarRiesgo(P, I)</code> del motor frente a los casos de prueba de valores frontera:
       </p>
       <table class="qa-table">
         <thead>
@@ -1865,7 +1865,7 @@
         }
       ];
 
-      // Casos de prueba oficiales del documento
+      // Casos de prueba de validación (QA)
       const QA_TEST_CASES = [
         { p: 4, i: 5, expectedScore: 20, expectedLevel: "Crítico" },
         { p: 2, i: 3, expectedScore: 6,  expectedLevel: "Medio" },
@@ -2870,7 +2870,7 @@
             await Swal.fire({
               icon: "info",
               title: "Organización base protegida",
-              text: "CoopAndes Digital es el caso de referencia de la actividad y no se elimina. Si modificaste sus hallazgos, usa el botón \"Restaurar Caso\".",
+              text: "CoopAndes Digital es el espacio demostrativo precargado del sistema y no se elimina. Si modificaste sus hallazgos, usa el botón \"Restaurar Caso\".",
               confirmButtonText: "Entendido"
             });
             return;
