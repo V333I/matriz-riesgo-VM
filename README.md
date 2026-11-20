@@ -16,7 +16,7 @@ Aplicación web estática desarrollada en un único archivo (`index.html`, HTML5
 ## URL Publicada (Cloudflare Pages)
 
 - **Sitio en producción:** `https://matriz-riesgo-victormanzano.pages.dev`
-- **Repositorio GitHub:** `https://github.com/V333I/matriz-riesgo-victormanzano`
+- **Repositorio GitHub:** `https://github.com/V333I/matriz-riesgo-VM`
 
 ---
 
