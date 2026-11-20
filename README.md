@@ -1,44 +1,91 @@
-# AndesShield — Plataforma de Matriz de Riesgos de Ciberseguridad
+# AndesShield v2 — Plataforma Full-Stack de Matriz de Riesgos de Ciberseguridad
 
-**AndesShield** es una aplicación web estática multi-organización desarrollada en un único archivo (`index.html`, HTML5 + CSS3 + JavaScript vanilla, **sin dependencias externas ni backend**) para evaluar, priorizar y gestionar riesgos de ciberseguridad en arquitecturas **Cloud**, **On-Premise** e **Híbridas**.
+**AndesShield** es una plataforma web multi-organización de gestión de riesgos de ciberseguridad con **arquitectura híbrida**:
+- **Modo Full-Stack Empresarial (Docker):** Backend en **Rust (Edition 2024, `#![forbid(unsafe_code)]`)** con **Axum 0.8**, **SQLx 0.9**, **Argon2id 0.6** y **PostgreSQL 18**, con autenticación por cookies `HttpOnly + SameSite=Strict`, aislamiento *multi-tenant*, control de acceso basado en roles (**RBAC**), *rate limiting* y **bitácora de auditoría inmutable (`ISO/IEC 27001:2022 A.8.15`)**.
+- **Modo Estático Zero-Dependency (Cloudflare Pages):** La misma interfaz (`index.html`, sin librerías externas) detecta automáticamente si la API Rust está disponible; en hosting estático opera de forma autónoma con persistencia local (`localStorage`) y exportación/importación portátil JSON/CSV/PDF.
 
-Diseñada con controles de referencia alineados a estándares internacionales y normativa vigente: **ISO/IEC 27001:2022**, **CIS AWS Benchmark**, **Ley 21.663** (Marco de Ciberseguridad de Chile) y **Ley 21.719** (Protección de Datos Personales).
+Diseñada con controles alineados a **ISO/IEC 27001:2022**, **CIS AWS Benchmark**, **OWASP Top 10**, **Ley 21.663** (Marco de Ciberseguridad de Chile) y **Ley 21.719** (Protección de Datos Personales).
 
-- **Sitio en producción (Cloudflare Pages):** https://matriz-riesgo-victormanzano.pages.dev
+- **Demo estática (Cloudflare Pages):** https://matriz-riesgo-victormanzano.pages.dev
 - **Repositorio:** https://github.com/V333I/matriz-riesgo-VM
 - **Autor:** Víctor Manzano
 
 ---
 
-## Características Principales
+## Stack Tecnológico (Últimas Versiones Estables)
 
-- **Arquitectura Zero-Dependency (Single-File):** Todo el sistema (interfaz, gráficos SVG, motor de cálculo y persistencia) reside en `index.html`, garantizando carga instantánea, operación offline y cero superficie de ataque por librerías de terceros.
-- **Gestión Multi-Organización:** Permite crear, renombrar, eliminar y alternar entre múltiples espacios de trabajo independientes desde la barra superior, manteniendo un caso demostrativo precargado (`CoopAndes Digital`).
-- **Panel Ejecutivo y Visualización Nativa:** KPIs de riesgo inherente y residual, porcentaje global de reducción, gráfico de dona SVG y barras comparativas *Antes vs. Después*.
-- **Matriz de Calor 5×5 Interactiva:** Alterna entre *Riesgo Inherente*, *Riesgo Residual* y vista dual *Antes vs. Después* lado a lado, con inspección detallada por hallazgo.
-- **Catálogo de Amenazas con Sugerencia ISO/IEC 27001:2022:** Asistente integrado con controles técnicos y organizacionales predefinidos para riesgos cloud y on-premise.
-- **Portabilidad y Reportes:** Persistencia local (`localStorage`), exportación a **CSV con BOM UTF-8** (compatible con Excel), exportación e importación de respaldos **JSON** por empresa y estilos `@media print` para exportación a PDF.
-- **Alertas y Diálogos Modernos:** Motor nativo estilo SweetAlert2 con íconos SVG animados, notificaciones *toast* y soporte completo para **Modo Oscuro / Modo Claro**.
-- **Suite de Validación Integrada (QA):** Módulo en vivo para comprobar el motor de clasificación frente a casos frontera.
-
----
-
-## Metodología de Cálculo de Riesgo
-
-El motor calcula el nivel de riesgo mediante la fórmula $R = P \times I$ en escala de `1` a `5` para **Probabilidad (`P`)** e **Impacto (`I`)**, exigiendo justificación obligatoria mediante **Fuente del dato**:
-
-| Nivel de Riesgo | Rango ($R = P \times I$) | Color | Acción Recomendada |
-| :--- | :---: | :---: | :--- |
-| **Bajo** | `1 – 5` | Verde | Monitorear |
-| **Medio** | `6 – 9` | Amarillo | Mejorar controles |
-| **Alto** | `10 – 16` | Naranjo | Intervenir pronto |
-| **Crítico** | `17 – 25` | Rojo | Intervenir ya |
+| Capa | Tecnología | Versión |
+| :--- | :--- | :--- |
+| **Backend** | Rust (`edition = "2024"`, `rust:1-bookworm`) | `1.100+` |
+| **Framework HTTP** | `axum` + `tokio` + `tower-http` | `0.8` / `1.54+` / `0.7` |
+| **Base de Datos** | PostgreSQL (`postgres:18-alpine`) + `sqlx` | `18` / `0.9` |
+| **Criptografía / Auth** | `argon2` (`Argon2id v19`) + `sha2` + `rand` | `0.6` / `0.10` / `0.9` |
+| **Frontend** | Single-file HTML5 / CSS3 / Vanilla JS (0 dependencias) | Nativo |
+| **Contenedores** | Docker Multi-Stage + Docker Compose (`read_only`, non-root) | `compose.yaml` |
 
 ---
 
-## Validación y Control de Calidad (QA)
+## Arquitectura del Proyecto
 
-Pruebas automatizadas ejecutadas sobre `clasificarRiesgo(P, I)` verificando rangos y valores frontera (`5 → Bajo`, `6 → Medio`, `16 → Alto`, `17 → Crítico`):
+```text
+.
+├── index.html                  # Frontend híbrido (detecta automáticamente /api/v1/health)
+├── _headers                    # Cabeceras OWASP para Cloudflare Pages
+├── compose.yaml                # Orquestación Docker endurecida (PostgreSQL 18 + Rust API)
+├── .env.example                # Plantilla de variables de entorno
+└── backend/
+    ├── Dockerfile              # Build multi-stage (rust:1-bookworm → debian:bookworm-slim non-root)
+    ├── Cargo.toml              # Dependencias Rust Edition 2024
+    ├── migrations/
+    │   └── 0001_init.sql       # Esquema: users, sessions, organizations, memberships, risks, audit_logs
+    └── src/
+        ├── main.rs             # Servidor Axum, middleware de cabeceras OWASP, límites y graceful shutdown
+        ├── auth.rs             # Argon2id v19, sesiones 256-bit (SHA-256 en BD), HttpOnly cookies, RBAC
+        ├── models.rs           # DTOs tipados, validación estricta y motor de cálculo R = P × I
+        ├── rate_limit.rs       # Rate limiter por IP (ventana deslizante anti fuerza bruta)
+        ├── routes.rs           # API REST /api/v1/* (auth, orgs, risks, import, reset, audit)
+        └── seed.rs             # Inicialización idempotente (admin inicial + caso CoopAndes Digital)
+```
+
+---
+
+## Seguridad y Endurecimiento (OWASP & Contenedores)
+
+- **Seguridad de memoria:** `#![forbid(unsafe_code)]` en todo el backend Rust.
+- **Autenticación robusta:** Contraseñas hasheadas con **Argon2id v19** y verificación anti-enumeración por tiempo constante; tokens de sesión CSPRNG de 256 bits almacenados únicamente como hash **SHA-256** en PostgreSQL y enviados en cookies `HttpOnly; SameSite=Strict` (`Secure` configurable para HTTPS).
+- **Aislamiento Multi-Tenant y RBAC:** Cada consulta valida membresía y rol (`admin`, `analyst`, `viewer`) en `memberships`, previniendo *IDOR / BOLA* (`OWASP API1:2023`).
+- **Protección contra Fuerza Bruta e Inyección:** *Rate limiting* estricto en `/api/v1/auth/*` (15 req/min por IP), límite de payload de `2 MiB`, consultas 100% parametrizadas (`SQLx`), escapado XSS y neutralización contra **CSV / Formula Injection (`CWE-1236`)**.
+- **Auditoría ISO/IEC 27001:2022 (A.8.15):** Registro inmutable en `audit_logs` de inicios de sesión, creación/edición/eliminación de organizaciones y riesgos, e importaciones JSON.
+- **Contenedores endurecidos:** Imagen runtime mínima sin compilador, usuario sin privilegios (`uid 10001`), sistema de archivos `read_only: true`, `cap_drop: [ALL]`, `no-new-privileges:true`, healthcheck nativo en el binario (`--healthcheck`) y PostgreSQL 18 aislado en red interna sin puertos expuestos al host.
+- **Cabeceras HTTP OWASP:** `Content-Security-Policy` estricta, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, `COOP` y `CORP`.
+
+---
+
+## Ejecución Rápida con Docker (Sin instalar Rust ni PostgreSQL en el PC)
+
+1. Clona el repositorio y (opcionalmente) crea tu archivo `.env` a partir de `.env.example`:
+   ```bash
+   git clone https://github.com/V333I/matriz-riesgo-VM.git
+   cd matriz-riesgo-VM
+   cp .env.example .env
+   ```
+2. Levanta toda la plataforma con Docker Compose:
+   ```bash
+   docker compose up -d --build
+   ```
+3. Abre **http://localhost:8080** en tu navegador.
+   - Credenciales iniciales de demostración (configurables vía `.env`): `admin@andesshield.local` / `AndesShield#2026!`, o puedes registrar tu propia cuenta desde el botón **Crear Cuenta**.
+4. Para detener y limpiar contenedores (sin dejar basura en el equipo):
+   ```bash
+   docker compose down        # Conserva los datos en el volumen Docker pgdata
+   docker compose down -v     # Elimina también el volumen de base de datos
+   ```
+
+---
+
+## Metodología y Validación QA (Escala 5×5)
+
+El motor calcula $R = P \times I$ (escala `1–5`) en frontend y backend con los rangos: `1–5` **Bajo** (*Monitorear*), `6–9` **Medio** (*Mejorar controles*), `10–16` **Alto** (*Intervenir pronto*) y `17–25` **Crítico** (*Intervenir ya*).
 
 | Probabilidad (`P`) | Impacto (`I`) | Resultado Esperado | Resultado Obtenido | Estado |
 | :---: | :---: | :--- | :--- | :---: |
@@ -47,47 +94,3 @@ Pruebas automatizadas ejecutadas sobre `clasificarRiesgo(P, I)` verificando rang
 | `3` | `5` | `15 – Alto` | `15 – Alto` (*Intervenir pronto*) | PASS |
 | `4` | `4` | `16 – Alto` | `16 – Alto` (*Intervenir pronto*) | PASS |
 | `1` | `5` | `5 – Bajo` | `5 – Bajo` (*Monitorear*) | PASS |
-
----
-
-## Caso Demostrativo Precargado — CoopAndes Digital
-
-La aplicación incluye precargado un escenario de referencia de arquitectura híbrida con 6 hallazgos priorizados y una reducción global de riesgo del **79%**:
-
-| ID | Activo / Hallazgo | Entorno | Riesgo Inherente ($P \times I$) | Control Propuesto (Resumen) | Riesgo Residual ($P' \times I'$) | Reducción |
-| :---: | :--- | :---: | :---: | :--- | :---: | :---: |
-| **R-01** | Bucket S3 de respaldos con acceso público de lectura | Cloud | **25 – Crítico** ($5 \times 5$) | S3 Block Public Access, IAM mínimo privilegio, SSE-KMS, AWS Config (ISO 27001 A.5.15, A.8.24) | **3 – Bajo** ($1 \times 3$) | **-22 pts (-88%)** |
-| **R-02** | Security Group con SSH (22) y RDP (3389) abiertos a `0.0.0.0/0` | Cloud | **20 – Crítico** ($5 \times 4$) | Cerrar `0.0.0.0/0`, usar AWS SSM Session Manager o VPN + MFA (ISO 27001 A.8.20, A.8.22) | **3 – Bajo** ($1 \times 3$) | **-17 pts (-85%)** |
-| **R-03** | Cuenta root sin MFA compartida por tres operadores | Cloud | **20 – Crítico** ($4 \times 5$) | MFA hardware FIDO2, custodia break-glass, usuarios IAM individuales con RBAC (ISO 27001 A.5.17, A.8.5) | **4 – Bajo** ($1 \times 4$) | **-16 pts (-80%)** |
-| **R-04** | Base de datos del portal con IP pública y almacenamiento sin cifrar | Cloud | **20 – Crítico** ($4 \times 5$) | Subred privada sin IP pública, cifrado AES-256 (KMS) en reposo y TLS 1.3 (ISO 27001 A.8.20, A.8.24) | **4 – Bajo** ($1 \times 4$) | **-16 pts (-80%)** |
-| **R-05** | Ausencia de registro de actividad y auditoría en la nube | Cloud | **12 – Alto** ($3 \times 4$) | AWS CloudTrail multi-región + Object Lock, VPC Flow Logs y SIEM (ISO 27001 A.8.15, A.8.16; Ley 21.663) | **3 – Bajo** ($1 \times 3$) | **-9 pts (-75%)** |
-| **R-06** | Rack on-premise sin control de acceso y respaldos sin pruebas de restauración | On-Premise | **12 – Alto** ($3 \times 4$) | Acceso físico tarjeta/biometría + CCTV, respaldos 3-2-1-1-0 y pruebas trimestrales RTO/RPO (ISO 27001 A.7.2, A.8.13) | **6 – Medio** ($2 \times 3$) | **-6 pts (-50%)** |
-
----
-
-## Seguridad y Endurecimiento (OWASP)
-
-La aplicación aplica defensa en profundidad tanto a nivel de código como de cabeceras HTTP en Cloudflare Pages (`_headers`):
-
-- **Cabeceras de Seguridad HTTP (`_headers`):** `Content-Security-Policy` estricta (`default-src 'none'; connect-src 'none'; object-src 'none'; frame-ancestors 'none'`), `X-Frame-Options: DENY` (anti-Clickjacking), `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, `HSTS` con `preload`, `COOP` y `CORP`.
-- **Prevención de XSS:** Escapado estricto de salidas HTML (`escapeHtml`) y uso de `.textContent`; cero uso de `eval()`, `document.write()` ni scripts de terceros.
-- **Protección contra CSV / Formula Injection (`CWE-1236`):** Neutralización automática de celdas que comienzan con `=`, `+`, `-`, `@`, tabulaciones o saltos de línea al exportar hacia Excel.
-- **Validación estricta en Importación JSON y Persistencia:** Límites contra DoS de cliente (2 MB por archivo, 500 hallazgos por empresa, 30 organizaciones), sanitización de esquema por lista blanca (mitigación de *Prototype Pollution*), redondeo seguro de puntajes (`1–5`) y control de cuota `QuotaExceededError`.
-
----
-
-## Uso y Despliegue
-
-### Ejecución local
-No requiere instalación ni proceso de compilación. Basta con clonar el repositorio y abrir `index.html` directamente en cualquier navegador moderno:
-
-```bash
-git clone https://github.com/V333I/matriz-riesgo-VM.git
-cd matriz-riesgo-VM
-```
-
-### Despliegue en Cloudflare Pages
-- **Framework preset:** `None`
-- **Build command:** *(vacío)*
-- **Build output directory:** `/`
-- **Production branch:** `main`

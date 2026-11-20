@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="no-referrer" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self';" />
   <title>AndesShield | Matriz de Riesgos de Ciberseguridad — CoopAndes Digital</title>
   <style>
     :root {
@@ -1272,10 +1272,12 @@
       <div class="toolbar">
         <button type="button" id="btn-scale" title="Ver escala oficial de probabilidad e impacto">Escala 5×5</button>
         <button type="button" id="btn-qa" title="Ejecutar los 5 casos de prueba de validación">Validación QA</button>
+        <button type="button" id="btn-audit" style="display:none;" title="Ver bitácora de auditoría ISO/IEC 27001:2022 A.8.15">Auditoría</button>
         <button type="button" id="btn-csv" title="Descargar matriz en formato CSV para Excel">Exportar CSV</button>
         <button type="button" id="btn-print" title="Imprimir o guardar como PDF">Imprimir / PDF</button>
         <button type="button" id="btn-reset" title="Restaurar los 6 hallazgos oficiales de CoopAndes Digital">Restaurar Caso</button>
         <button type="button" id="btn-theme" title="Alternar modo claro / oscuro">Modo Claro</button>
+        <button type="button" id="btn-auth" class="btn-primary" style="display:none;" title="Autenticación y sesión segura">Iniciar Sesión</button>
       </div>
     </div>
   </header>
@@ -1287,6 +1289,7 @@
         <span class="org-bar-label">Organización activa:</span>
         <select id="org-selector" aria-label="Cambiar de empresa u organización"></select>
         <span class="badge-env" id="org-sector-badge">Cooperativa / Financiero</span>
+        <span class="badge badge-low" id="backend-mode-badge" style="font-size:0.68rem; padding:0.12rem 0.5rem;">Modo Local</span>
       </div>
       <div class="org-bar-actions no-print">
         <button type="button" class="btn-primary btn-sm" id="btn-new-org" title="Crear una matriz independiente para otra empresa">+ Nueva Empresa</button>
@@ -1673,6 +1676,68 @@
     </div>
   </div>
 
+  <!-- MODAL: AUTENTICACIÓN RUST API (ARGON2ID + HTTPONLY) -->
+  <div class="modal-backdrop" id="modal-auth" role="dialog" aria-modal="true" aria-labelledby="modal-auth-title">
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 id="modal-auth-title">Acceso Seguro — AndesShield API</h3>
+        <div class="segmented" role="group" aria-label="Modo de acceso">
+          <button type="button" class="active" data-auth-tab="login">Iniciar Sesión</button>
+          <button type="button" data-auth-tab="register">Crear Cuenta</button>
+        </div>
+      </div>
+      <form id="auth-form" novalidate style="display:flex; flex-direction:column; gap:0.85rem;">
+        <div class="field" id="f-auth-name" style="display:none;">
+          <label for="inp-auth-name">Nombre completo <span class="req">*</span></label>
+          <input type="text" id="inp-auth-name" placeholder="Ej: Víctor Manzano" maxlength="120" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="inp-auth-email">Correo electrónico <span class="req">*</span></label>
+          <input type="text" id="inp-auth-email" placeholder="admin@andesshield.local" required maxlength="255" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="inp-auth-password">Contraseña <span class="req">*</span></label>
+          <input type="password" id="inp-auth-password" placeholder="Mínimo 10 caracteres" required maxlength="128" autocomplete="current-password" style="width:100%; font-family:inherit; font-size:0.85rem; padding:0.55rem 0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-surface-2); color:var(--text-primary);" />
+        </div>
+        <div id="auth-hint" style="font-size:0.76rem; color:var(--text-muted); background:var(--bg-surface-2); padding:0.6rem 0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border-subtle);">
+          <strong>Backend Rust + PostgreSQL 18 detectado.</strong><br>
+          Sesiones protegidas con <code>Argon2id</code> y cookies <code>HttpOnly + SameSite=Strict</code>.<br>
+          Demo inicial: <code>admin@andesshield.local</code> / <code>AndesShield#2026!</code>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.6rem; margin-top:0.2rem;">
+          <button type="submit" class="btn-primary" id="btn-auth-submit" style="width:100%; justify-content:center;">Ingresar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: BITÁCORA DE AUDITORÍA (ISO/IEC 27001:2022 A.8.15) -->
+  <div class="modal-backdrop" id="modal-audit" role="dialog" aria-modal="true" aria-labelledby="modal-audit-title">
+    <div class="modal" style="max-width:860px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="modal-audit-title">Bitácora de Auditoría — ISO/IEC 27001:2022 (A.8.15)</h3>
+          <p class="card-subtitle">Registro inmutable en PostgreSQL 18 de acciones sobre la organización activa.</p>
+        </div>
+        <button type="button" class="btn-sm" data-close-modal="modal-audit">Cerrar ✕</button>
+      </div>
+      <div class="table-wrap" style="max-height:60vh; overflow:auto;">
+        <table class="qa-table" style="margin-top:0;">
+          <thead>
+            <tr>
+              <th>Fecha / Hora (UTC)</th>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Entidad</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody id="audit-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- SWEETALERT2-STYLE MODAL -->
   <div class="swal-backdrop" id="swal-backdrop" role="alertdialog" aria-modal="true" aria-labelledby="swal-title" aria-describedby="swal-text">
     <div class="swal-card">
@@ -1876,7 +1941,10 @@
         { p: 1, i: 5, expectedScore: 5,  expectedLevel: "Bajo" }
       ];
 
-      // Estado de la aplicación (Multi-Organización)
+      // Estado de la aplicación (Híbrido: API Rust + PostgreSQL 18 o Local)
+      let backendMode = "local"; // "rust" | "local"
+      let currentUser = null;
+      let authTab = "login";
       let workspaceState = null;
       let risks = [];
       let editingId = null;
@@ -1884,6 +1952,122 @@
       let heatmapMode = "inherent"; // inherent | residual | dual
       let donutMode = "inherent";   // inherent | residual
       let sortState = { key: "inherent", dir: "desc" };
+
+      async function apiRequest(path, options = {}) {
+        const res = await fetch(`/api/v1${path}`, {
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+          },
+          ...options
+        });
+        let data = null;
+        try {
+          data = await res.json();
+        } catch (_) {}
+        if (!res.ok) {
+          const err = new Error(data?.error || `Error HTTP ${res.status}`);
+          err.status = res.status;
+          throw err;
+        }
+        return data;
+      }
+
+      function renderBackendStatus() {
+        const badge = document.getElementById("backend-mode-badge");
+        const btnAuth = document.getElementById("btn-auth");
+        const btnAudit = document.getElementById("btn-audit");
+
+        if (backendMode === "rust") {
+          badge.textContent = "Rust API · PostgreSQL 18";
+          badge.className = "badge badge-low";
+          btnAuth.style.display = "inline-flex";
+          if (currentUser) {
+            btnAudit.style.display = "inline-flex";
+            btnAuth.textContent = `${currentUser.full_name.split(" ")[0]} · Salir`;
+            btnAuth.className = "btn-sm";
+          } else {
+            btnAudit.style.display = "none";
+            btnAuth.textContent = "Iniciar Sesión";
+            btnAuth.className = "btn-primary";
+          }
+        } else {
+          badge.textContent = "Modo Local";
+          badge.className = "badge badge-env";
+          btnAuth.style.display = "none";
+          btnAudit.style.display = "none";
+        }
+      }
+
+      async function loadBackendWorkspace(preferredOrgId = null) {
+        const meData = await apiRequest("/auth/me");
+        currentUser = meData.user;
+        const orgs = (meData.organizations || []).map(o => ({
+          id: o.id,
+          name: o.name,
+          sector: o.sector,
+          isDefault: Boolean(o.is_default),
+          role: o.role,
+          riskCount: o.risk_count,
+          risks: []
+        }));
+
+        if (orgs.length === 0) {
+          const created = await apiRequest("/orgs", {
+            method: "POST",
+            body: JSON.stringify({ name: "Mi Organización", sector: "General" })
+          });
+          orgs.push({
+            id: created.id,
+            name: created.name,
+            sector: created.sector,
+            isDefault: false,
+            role: created.role,
+            riskCount: 0,
+            risks: []
+          });
+        }
+
+        const activeId = (preferredOrgId && orgs.some(o => o.id === preferredOrgId))
+          ? preferredOrgId
+          : orgs[0].id;
+
+        workspaceState = { activeOrgId: activeId, orgs };
+        const fetchedRisks = await apiRequest(`/orgs/${activeId}/risks`);
+        const activeOrg = getActiveOrg();
+        activeOrg.risks = fetchedRisks;
+        activeOrg.riskCount = fetchedRisks.length;
+        risks = activeOrg.risks;
+        renderBackendStatus();
+        clearForm();
+        renderAll();
+      }
+
+      async function openAuditModal() {
+        if (backendMode !== "rust" || !currentUser) return;
+        const active = getActiveOrg();
+        try {
+          const logs = await apiRequest(`/orgs/${active.id}/audit`);
+          const tbody = document.getElementById("audit-tbody");
+          if (!logs.length) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:1.25rem;">Sin eventos registrados todavía.</td></tr>`;
+          } else {
+            tbody.innerHTML = logs.map(l => `
+              <tr>
+                <td style="white-space:nowrap;">${escapeHtml(new Date(l.created_at).toLocaleString("es-CL"))}</td>
+                <td>${escapeHtml(l.actor_email || "sistema")}</td>
+                <td><span class="badge badge-env">${escapeHtml(l.action)}</span></td>
+                <td>${escapeHtml(l.entity_type)}${l.entity_id ? ` (${escapeHtml(l.entity_id)})` : ""}</td>
+                <td>${escapeHtml(l.ip_address || "—")}</td>
+              </tr>
+            `).join("");
+          }
+          openModal("modal-audit");
+        } catch (err) {
+          Swal.fire({ icon: "error", title: "Error cargando auditoría", text: err.message, confirmStyle: "danger" });
+        }
+      }
 
       // Clasificación oficial: R = P * I
       function clasificarRiesgo(p, i) {
@@ -2132,9 +2316,13 @@
       }
 
       function saveRisks() {
+        const org = getActiveOrg();
+        if (org) {
+          org.risks = risks;
+          org.riskCount = risks.length;
+        }
+        if (backendMode === "rust") return;
         try {
-          const org = getActiveOrg();
-          if (org) org.risks = risks;
           localStorage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(workspaceState));
         } catch (e) {
           console.warn("No se pudo guardar en localStorage:", e);
@@ -2153,9 +2341,11 @@
       function renderOrgBar() {
         const sel = document.getElementById("org-selector");
         const active = getActiveOrg();
-        sel.innerHTML = workspaceState.orgs.map(o =>
-          `<option value="${escapeHtml(o.id)}"${o.id === active.id ? " selected" : ""}>${escapeHtml(o.name)} (${o.risks.length})</option>`
-        ).join("");
+        if (!active) return;
+        sel.innerHTML = workspaceState.orgs.map(o => {
+          const count = o.id === active.id ? risks.length : (typeof o.riskCount === "number" ? o.riskCount : o.risks.length);
+          return `<option value="${escapeHtml(o.id)}"${o.id === active.id ? " selected" : ""}>${escapeHtml(o.name)} (${count})</option>`;
+        }).join("");
 
         document.getElementById("org-sector-badge").textContent = active.sector || "General";
         document.getElementById("brand-org-tag").textContent = active.name;
@@ -2165,22 +2355,34 @@
         const delBtn = document.getElementById("btn-delete-org");
         delBtn.style.opacity = active.isDefault ? "0.55" : "1";
         delBtn.title = active.isDefault
-          ? "CoopAndes Digital es el caso base de referencia"
+          ? "CoopAndes Digital es el espacio base de referencia"
           : `Eliminar organización ${active.name}`;
 
         const resetBtn = document.getElementById("btn-reset");
         resetBtn.textContent = active.isDefault ? "Restaurar Caso" : "Limpiar Matriz";
         resetBtn.title = active.isDefault
-          ? "Restaurar los 6 hallazgos oficiales de CoopAndes Digital"
+          ? "Restaurar los 6 hallazgos base de CoopAndes Digital"
           : `Vaciar todos los hallazgos de ${active.name}`;
       }
 
-      function switchOrg(orgId) {
+      async function switchOrg(orgId) {
         const target = workspaceState.orgs.find(o => o.id === orgId);
         if (!target) return;
         workspaceState.activeOrgId = target.id;
-        risks = target.risks;
-        saveRisks();
+        if (backendMode === "rust") {
+          try {
+            const fetched = await apiRequest(`/orgs/${target.id}/risks`);
+            target.risks = fetched;
+            target.riskCount = fetched.length;
+            risks = target.risks;
+          } catch (err) {
+            Swal.fire({ icon: "error", title: "No se pudo cargar la organización", text: err.message, confirmStyle: "danger" });
+            return;
+          }
+        } else {
+          risks = target.risks;
+          saveRisks();
+        }
         document.getElementById("filter-search").value = "";
         document.getElementById("filter-level").value = "ALL";
         document.getElementById("filter-env").value = "ALL";
@@ -2235,6 +2437,25 @@
 
           const orgName = cleanText(parsed?.organization?.name || file.name.replace(/\.json$/i, ""), 60, "Organización Importada");
           const orgSector = cleanText(parsed?.organization?.sector, 60, "General");
+
+          if (backendMode === "rust") {
+            const created = await apiRequest("/orgs/import", {
+              method: "POST",
+              body: JSON.stringify({
+                organization: { name: orgName, sector: orgSector },
+                risks: sanitized
+              })
+            });
+            await loadBackendWorkspace(created.id);
+            await Swal.fire({
+              icon: "success",
+              title: "Matriz importada en PostgreSQL",
+              text: `Se creó el espacio "${created.name}" con ${created.risk_count} hallazgo(s) guardados en el servidor.`,
+              confirmButtonText: "Abrir matriz",
+              confirmStyle: "success"
+            });
+            return;
+          }
 
           const newOrg = {
             id: "org-" + Date.now(),
@@ -2852,6 +3073,77 @@
         });
         document.getElementById("btn-csv").addEventListener("click", exportCSV);
         document.getElementById("btn-print").addEventListener("click", () => window.print());
+        // Auth & Audit controls (Rust API mode)
+        document.getElementById("btn-audit").addEventListener("click", openAuditModal);
+        document.getElementById("btn-auth").addEventListener("click", async () => {
+          if (currentUser) {
+            const res = await Swal.fire({
+              icon: "question",
+              title: "¿Cerrar sesión?",
+              text: `Sesión activa como ${currentUser.email}. Se invalidará tu cookie HttpOnly en el servidor.`,
+              showCancelButton: true,
+              confirmButtonText: "Sí, salir",
+              cancelButtonText: "Cancelar",
+              confirmStyle: "warning"
+            });
+            if (res.isConfirmed) {
+              try { await apiRequest("/auth/logout", { method: "POST" }); } catch (_) {}
+              currentUser = null;
+              risks = [];
+              workspaceState = { activeOrgId: null, orgs: [] };
+              renderBackendStatus();
+              openModal("modal-auth");
+              showToast("Sesión cerrada correctamente.", "info");
+            }
+          } else {
+            openModal("modal-auth");
+          }
+        });
+
+        document.querySelectorAll("[data-auth-tab]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            document.querySelectorAll("[data-auth-tab]").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            authTab = btn.getAttribute("data-auth-tab");
+            const isReg = authTab === "register";
+            document.getElementById("f-auth-name").style.display = isReg ? "flex" : "none";
+            document.getElementById("btn-auth-submit").textContent = isReg ? "Crear Cuenta Segura" : "Ingresar";
+            document.getElementById("inp-auth-password").setAttribute("autocomplete", isReg ? "new-password" : "current-password");
+          });
+        });
+
+        document.getElementById("auth-form").addEventListener("submit", async e => {
+          e.preventDefault();
+          const email = document.getElementById("inp-auth-email").value.trim();
+          const password = document.getElementById("inp-auth-password").value;
+          const fullName = document.getElementById("inp-auth-name").value.trim();
+          try {
+            if (authTab === "register") {
+              await apiRequest("/auth/register", {
+                method: "POST",
+                body: JSON.stringify({ full_name: fullName, email, password })
+              });
+            } else {
+              await apiRequest("/auth/login", {
+                method: "POST",
+                body: JSON.stringify({ email, password })
+              });
+            }
+            document.getElementById("inp-auth-password").value = "";
+            closeModal("modal-auth");
+            await loadBackendWorkspace();
+            showToast(`Bienvenido, ${currentUser.full_name}`, "success");
+          } catch (err) {
+            Swal.fire({
+              icon: "error",
+              title: authTab === "register" ? "No se pudo crear la cuenta" : "Acceso denegado",
+              text: err.message,
+              confirmButtonText: "Intentar de nuevo",
+              confirmStyle: "danger"
+            });
+          }
+        });
+
         // Multi-Organization controls
         document.getElementById("org-selector").addEventListener("change", e => {
           switchOrg(e.target.value);
@@ -2870,6 +3162,7 @@
 
         document.getElementById("btn-rename-org").addEventListener("click", () => {
           const active = getActiveOrg();
+          if (!active) return;
           orgModalMode = "rename";
           document.getElementById("modal-org-title").textContent = "Editar Organización";
           document.getElementById("btn-save-org").textContent = "Guardar Cambios";
@@ -2880,7 +3173,7 @@
           setTimeout(() => document.getElementById("inp-org-name").focus(), 40);
         });
 
-        document.getElementById("org-form").addEventListener("submit", e => {
+        document.getElementById("org-form").addEventListener("submit", async e => {
           e.preventDefault();
           const nameVal = document.getElementById("inp-org-name").value.trim();
           const sectorVal = document.getElementById("inp-org-sector").value.trim() || "General";
@@ -2894,19 +3187,34 @@
 
           if (orgModalMode === "rename") {
             const active = getActiveOrg();
-            active.name = cleanText(nameVal, 60, active.name);
-            active.sector = cleanText(sectorVal, 60, "General");
-            saveRisks();
-            renderAll();
+            const cleanName = cleanText(nameVal, 60, active.name);
+            const cleanSector = cleanText(sectorVal, 60, "General");
+            if (backendMode === "rust") {
+              try {
+                await apiRequest(`/orgs/${active.id}`, {
+                  method: "PATCH",
+                  body: JSON.stringify({ name: cleanName, sector: cleanSector })
+                });
+                await loadBackendWorkspace(active.id);
+              } catch (err) {
+                Swal.fire({ icon: "error", title: "Error al actualizar", text: err.message, confirmStyle: "danger" });
+                return;
+              }
+            } else {
+              active.name = cleanName;
+              active.sector = cleanSector;
+              saveRisks();
+              renderAll();
+            }
             closeModal("modal-org");
-            showToast(`Organización actualizada: ${active.name}`, "success");
+            showToast(`Organización actualizada: ${cleanName}`, "success");
           } else {
             if (workspaceState.orgs.length >= MAX_ORGS) {
               closeModal("modal-org");
               Swal.fire({
                 icon: "warning",
                 title: "Límite de organizaciones alcanzado",
-                text: `Se permite un máximo de ${MAX_ORGS} espacios de trabajo en el navegador.`,
+                text: `Se permite un máximo de ${MAX_ORGS} espacios de trabajo.`,
                 confirmButtonText: "Entendido",
                 confirmStyle: "warning"
               });
@@ -2914,20 +3222,34 @@
             }
             const cleanName = cleanText(nameVal, 60, "Organización");
             const cleanSector = cleanText(sectorVal, 60, "General");
-            const newOrg = {
-              id: "org-" + Date.now(),
-              name: cleanName,
-              sector: cleanSector,
-              isDefault: false,
-              risks: []
-            };
-            workspaceState.orgs.push(newOrg);
-            workspaceState.activeOrgId = newOrg.id;
-            risks = newOrg.risks;
-            saveRisks();
-            clearForm();
-            renderAll();
-            closeModal("modal-org");
+            if (backendMode === "rust") {
+              try {
+                const created = await apiRequest("/orgs", {
+                  method: "POST",
+                  body: JSON.stringify({ name: cleanName, sector: cleanSector })
+                });
+                closeModal("modal-org");
+                await loadBackendWorkspace(created.id);
+              } catch (err) {
+                Swal.fire({ icon: "error", title: "Error al crear organización", text: err.message, confirmStyle: "danger" });
+                return;
+              }
+            } else {
+              const newOrg = {
+                id: "org-" + Date.now(),
+                name: cleanName,
+                sector: cleanSector,
+                isDefault: false,
+                risks: []
+              };
+              workspaceState.orgs.push(newOrg);
+              workspaceState.activeOrgId = newOrg.id;
+              risks = newOrg.risks;
+              saveRisks();
+              clearForm();
+              renderAll();
+              closeModal("modal-org");
+            }
             Swal.fire({
               icon: "success",
               title: `Espacio creado: ${cleanName}`,
@@ -2940,6 +3262,7 @@
 
         document.getElementById("btn-delete-org").addEventListener("click", async () => {
           const active = getActiveOrg();
+          if (!active) return;
           if (active.isDefault) {
             await Swal.fire({
               icon: "info",
@@ -2952,19 +3275,29 @@
           const result = await Swal.fire({
             icon: "warning",
             title: `¿Eliminar "${active.name}"?`,
-            text: `Se eliminará esta organización junto con sus ${active.risks.length} hallazgo(s) registrados.`,
+            text: `Se eliminará esta organización junto con sus ${risks.length} hallazgo(s) registrados.`,
             showCancelButton: true,
             confirmButtonText: "Sí, eliminar",
             cancelButtonText: "Cancelar",
             confirmStyle: "danger"
           });
           if (result.isConfirmed) {
-            workspaceState.orgs = workspaceState.orgs.filter(o => o.id !== active.id);
-            workspaceState.activeOrgId = workspaceState.orgs[0].id;
-            risks = workspaceState.orgs[0].risks;
-            saveRisks();
-            clearForm();
-            renderAll();
+            if (backendMode === "rust") {
+              try {
+                await apiRequest(`/orgs/${active.id}`, { method: "DELETE" });
+                await loadBackendWorkspace();
+              } catch (err) {
+                Swal.fire({ icon: "error", title: "No se pudo eliminar", text: err.message, confirmStyle: "danger" });
+                return;
+              }
+            } else {
+              workspaceState.orgs = workspaceState.orgs.filter(o => o.id !== active.id);
+              workspaceState.activeOrgId = workspaceState.orgs[0].id;
+              risks = workspaceState.orgs[0].risks;
+              saveRisks();
+              clearForm();
+              renderAll();
+            }
             showToast(`Organización "${active.name}" eliminada.`, "success");
           }
         });
@@ -2982,19 +3315,31 @@
 
         document.getElementById("btn-reset").addEventListener("click", async () => {
           const active = getActiveOrg();
+          if (!active) return;
           if (active.isDefault) {
             const result = await Swal.fire({
               icon: "warning",
               title: "¿Restaurar caso CoopAndes Digital?",
-              text: "Se restaurarán los 6 hallazgos oficiales y se perderán los cambios guardados localmente en esta organización.",
+              text: "Se restaurarán los 6 hallazgos oficiales y se perderán los cambios guardados en esta organización.",
               showCancelButton: true,
               confirmButtonText: "Sí, restaurar",
               cancelButtonText: "Cancelar",
               confirmStyle: "warning"
             });
             if (result.isConfirmed) {
-              risks = JSON.parse(JSON.stringify(DEFAULT_COOPANDES_RISKS));
-              saveRisks();
+              if (backendMode === "rust") {
+                try {
+                  risks = await apiRequest(`/orgs/${active.id}/reset`, { method: "POST" });
+                  active.risks = risks;
+                  active.riskCount = risks.length;
+                } catch (err) {
+                  Swal.fire({ icon: "error", title: "Error al restaurar", text: err.message, confirmStyle: "danger" });
+                  return;
+                }
+              } else {
+                risks = JSON.parse(JSON.stringify(DEFAULT_COOPANDES_RISKS));
+                saveRisks();
+              }
               clearForm();
               renderAll();
               await Swal.fire({
@@ -3016,8 +3361,19 @@
               confirmStyle: "danger"
             });
             if (result.isConfirmed) {
-              risks = [];
-              saveRisks();
+              if (backendMode === "rust") {
+                try {
+                  risks = await apiRequest(`/orgs/${active.id}/reset`, { method: "POST" });
+                  active.risks = risks;
+                  active.riskCount = risks.length;
+                } catch (err) {
+                  Swal.fire({ icon: "error", title: "Error al limpiar", text: err.message, confirmStyle: "danger" });
+                  return;
+                }
+              } else {
+                risks = [];
+                saveRisks();
+              }
               clearForm();
               renderAll();
               showToast(`Matriz de ${active.name} vaciada.`, "success");
@@ -3102,7 +3458,7 @@
         document.getElementById("btn-cancel-edit").addEventListener("click", clearForm);
 
         // Form submit
-        document.getElementById("risk-form").addEventListener("submit", e => {
+        document.getElementById("risk-form").addEventListener("submit", async e => {
           e.preventDefault();
           const idVal = document.getElementById("inp-id").value.trim().toUpperCase();
           const assetVal = document.getElementById("inp-asset").value.trim();
@@ -3163,13 +3519,38 @@
             ir: irVal
           };
 
-          if (editingId) {
-            const idx = risks.findIndex(r => r.id === editingId);
-            if (idx !== -1) risks[idx] = record;
-            showToast(`Riesgo ${record.id} actualizado correctamente.`);
+          if (backendMode === "rust") {
+            const active = getActiveOrg();
+            try {
+              if (editingId) {
+                const updated = await apiRequest(`/orgs/${active.id}/risks/${encodeURIComponent(editingId)}`, {
+                  method: "PUT",
+                  body: JSON.stringify(record)
+                });
+                const idx = risks.findIndex(r => r.id === editingId);
+                if (idx !== -1) risks[idx] = updated;
+                showToast(`Riesgo ${updated.id} actualizado en PostgreSQL.`, "success");
+              } else {
+                const created = await apiRequest(`/orgs/${active.id}/risks`, {
+                  method: "POST",
+                  body: JSON.stringify(record)
+                });
+                risks.push(created);
+                showToast(`Riesgo ${created.id} guardado en PostgreSQL.`, "success");
+              }
+            } catch (err) {
+              Swal.fire({ icon: "error", title: "Error guardando riesgo", text: err.message, confirmStyle: "danger" });
+              return;
+            }
           } else {
-            risks.push(record);
-            showToast(`Riesgo ${record.id} agregado a la matriz.`);
+            if (editingId) {
+              const idx = risks.findIndex(r => r.id === editingId);
+              if (idx !== -1) risks[idx] = record;
+              showToast(`Riesgo ${record.id} actualizado correctamente.`, "success");
+            } else {
+              risks.push(record);
+              showToast(`Riesgo ${record.id} agregado a la matriz.`, "success");
+            }
           }
 
           saveRisks();
@@ -3222,6 +3603,15 @@
               confirmStyle: "danger"
             });
             if (result.isConfirmed) {
+              if (backendMode === "rust") {
+                const active = getActiveOrg();
+                try {
+                  await apiRequest(`/orgs/${active.id}/risks/${encodeURIComponent(id)}`, { method: "DELETE" });
+                } catch (err) {
+                  Swal.fire({ icon: "error", title: "No se pudo eliminar", text: err.message, confirmStyle: "danger" });
+                  return;
+                }
+              }
               risks = risks.filter(r => r.id !== id);
               saveRisks();
               if (editingId === id) clearForm();
@@ -3232,15 +3622,46 @@
         });
       }
 
-      // Bootstrap
-      initTheme();
-      initCatalog();
-      workspaceState = loadWorkspaces();
-      risks = getActiveOrg().risks;
-      saveRisks();
-      bindEvents();
-      clearForm();
-      renderAll();
+      // Bootstrap híbrido: detecta automáticamente el backend Rust + PostgreSQL 18
+      async function bootstrap() {
+        initTheme();
+        initCatalog();
+        bindEvents();
+
+        if (window.location.protocol.startsWith("http")) {
+          try {
+            const healthRes = await fetch("/api/v1/health", { credentials: "same-origin" });
+            if (healthRes.ok) {
+              const info = await healthRes.json();
+              if (info && info.status === "ok") {
+                backendMode = "rust";
+                renderBackendStatus();
+                try {
+                  await loadBackendWorkspace();
+                } catch (_) {
+                  workspaceState = { activeOrgId: null, orgs: [] };
+                  risks = [];
+                  renderBackendStatus();
+                  openModal("modal-auth");
+                }
+                return;
+              }
+            }
+          } catch (_) {
+            // Static / Cloudflare Pages mode fallback
+          }
+        }
+
+        backendMode = "local";
+        workspaceState = loadWorkspaces();
+        risks = getActiveOrg().risks;
+        saveRisks();
+        renderBackendStatus();
+        clearForm();
+        renderAll();
+      }
+
+      bootstrap();
     })();
   </script>
 </body>

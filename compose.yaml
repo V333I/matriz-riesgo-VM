@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: andesshield-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-andesshield}
+      POSTGRES_USER: ${POSTGRES_USER:-andesshield}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-AndesShield_DB_2026!}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-andesshield} -d ${POSTGRES_DB:-andesshield}"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    security_opt:
+      - no-new-privileges:true
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: andesshield-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      BIND_ADDR: 0.0.0.0:8080
+      DATABASE_URL: postgres://${POSTGRES_USER:-andesshield}:${POSTGRES_PASSWORD:-AndesShield_DB_2026!}@db:5432/${POSTGRES_DB:-andesshield}
+      RUST_LOG: ${RUST_LOG:-andesshield_api=info,tower_http=info}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-24}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Víctor Manzano}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@andesshield.local}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-AndesShield#2026!}
+    networks:
+      - internal
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/andesshield-api", "--healthcheck"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  pgdata:
