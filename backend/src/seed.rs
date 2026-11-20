@@ -143,13 +143,23 @@ pub async fn seed_initial_data(pool: &PgPool) -> Result<(), Box<dyn std::error::
         return Ok(());
     }
 
-    let admin_name = std::env::var("SEED_ADMIN_NAME").unwrap_or_else(|_| "Víctor Manzano".to_string());
     let admin_email = std::env::var("SEED_ADMIN_EMAIL")
-        .unwrap_or_else(|_| "admin@andesshield.local".to_string())
+        .unwrap_or_default()
         .trim()
         .to_lowercase();
-    let admin_password = std::env::var("SEED_ADMIN_PASSWORD")
-        .unwrap_or_else(|_| "AndesShield#2026!".to_string());
+    let admin_password = std::env::var("SEED_ADMIN_PASSWORD").unwrap_or_default();
+
+    if admin_email.is_empty() || admin_password.len() < 10 {
+        tracing::info!(
+            "Sin credenciales SEED_ADMIN_* en entorno; la primera cuenta registrada desde la web recibirá el caso demostrativo CoopAndes Digital."
+        );
+        return Ok(());
+    }
+
+    let admin_name = std::env::var("SEED_ADMIN_NAME")
+        .ok()
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| "Administrador".to_string());
 
     let pw_hash = hash_password(&admin_password)
         .map_err(|e| format!("No se pudo generar hash Argon2id inicial: {}", e.message))?;

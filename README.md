@@ -52,7 +52,8 @@ Diseñada con controles alineados a **ISO/IEC 27001:2022**, **CIS AWS Benchmark*
 ## Seguridad y Endurecimiento (OWASP & Contenedores)
 
 - **Seguridad de memoria:** `#![forbid(unsafe_code)]` en todo el backend Rust.
-- **Autenticación robusta:** Contraseñas hasheadas con **Argon2id v19** y verificación anti-enumeración por tiempo constante; tokens de sesión CSPRNG de 256 bits almacenados únicamente como hash **SHA-256** en PostgreSQL y enviados en cookies `HttpOnly; SameSite=Strict` (`Secure` configurable para HTTPS).
+- **Autenticación y Gestión de Cuenta:** Contraseñas hasheadas con **Argon2id v19** y verificación anti-enumeración por tiempo constante; tokens de sesión CSPRNG de 256 bits almacenados únicamente como hash **SHA-256** en PostgreSQL y enviados en cookies `HttpOnly; SameSite=Strict`; menú de usuario para editar perfil, cambiar contraseña (con revocación automática de otras sesiones) y revocar sesiones activas.
+- **Cero credenciales hardcodeadas (`CWE-798`):** Todas las claves y secretos se configuran vía `.env` (excluido del repositorio mediante `.gitignore`).
 - **Aislamiento Multi-Tenant y RBAC:** Cada consulta valida membresía y rol (`admin`, `analyst`, `viewer`) en `memberships`, previniendo *IDOR / BOLA* (`OWASP API1:2023`).
 - **Protección contra Fuerza Bruta e Inyección:** *Rate limiting* estricto en `/api/v1/auth/*` (15 req/min por IP), límite de payload de `2 MiB`, consultas 100% parametrizadas (`SQLx`), escapado XSS y neutralización contra **CSV / Formula Injection (`CWE-1236`)**.
 - **Auditoría ISO/IEC 27001:2022 (A.8.15):** Registro inmutable en `audit_logs` de inicios de sesión, creación/edición/eliminación de organizaciones y riesgos, e importaciones JSON.
@@ -63,7 +64,7 @@ Diseñada con controles alineados a **ISO/IEC 27001:2022**, **CIS AWS Benchmark*
 
 ## Ejecución Rápida con Docker (Sin instalar Rust ni PostgreSQL en el PC)
 
-1. Clona el repositorio y (opcionalmente) crea tu archivo `.env` a partir de `.env.example`:
+1. Clona el repositorio, crea tu archivo `.env` a partir de `.env.example` y define tus contraseñas seguras (`POSTGRES_PASSWORD` y opcionalmente `SEED_ADMIN_*`):
    ```bash
    git clone https://github.com/V333I/matriz-riesgo-VM.git
    cd matriz-riesgo-VM
@@ -73,8 +74,7 @@ Diseñada con controles alineados a **ISO/IEC 27001:2022**, **CIS AWS Benchmark*
    ```bash
    docker compose up -d --build
    ```
-3. Abre **http://localhost:8080** en tu navegador.
-   - Credenciales iniciales de demostración (configurables vía `.env`): `admin@andesshield.local` / `AndesShield#2026!`, o puedes registrar tu propia cuenta desde el botón **Crear Cuenta**.
+3. Abre **http://localhost:8080** en tu navegador y selecciona **Crear Cuenta** (o inicia sesión con el administrador que hayas configurado en `.env`). La primera cuenta creada recibe automáticamente el caso demostrativo **CoopAndes Digital**.
 4. Para detener y limpiar contenedores (sin dejar basura en el equipo):
    ```bash
    docker compose down        # Conserva los datos en el volumen Docker pgdata

@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-andesshield}
       POSTGRES_USER: ${POSTGRES_USER:-andesshield}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-AndesShield_DB_2026!}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configura POSTGRES_PASSWORD en .env}
     volumes:
       - pgdata:/var/lib/postgresql
     networks:
@@ -32,13 +32,13 @@ services:
       - "${APP_PORT:-8080}:8080"
     environment:
       BIND_ADDR: 0.0.0.0:8080
-      DATABASE_URL: postgres://${POSTGRES_USER:-andesshield}:${POSTGRES_PASSWORD:-AndesShield_DB_2026!}@db:5432/${POSTGRES_DB:-andesshield}
+      DATABASE_URL: postgres://${POSTGRES_USER:-andesshield}:${POSTGRES_PASSWORD:?Configura POSTGRES_PASSWORD en .env}@db:5432/${POSTGRES_DB:-andesshield}
       RUST_LOG: ${RUST_LOG:-andesshield_api=info,tower_http=info}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-24}
-      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Víctor Manzano}
-      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@andesshield.local}
-      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-AndesShield#2026!}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
     networks:
       - internal
     read_only: true

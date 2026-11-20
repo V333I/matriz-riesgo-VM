@@ -107,12 +107,18 @@ pub async fn register(
     .fetch_one(&state.pool)
     .await?;
 
-    // Create starter isolated organization for the new user
+    // Create starter isolated organization; seed CoopAndes Digital if this is the first org in DB
+    let existing_orgs: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM organizations")
+        .fetch_one(&state.pool)
+        .await?;
+    let is_first_org = existing_orgs.0 == 0;
+
     let org_id: (Uuid,) = sqlx::query_as(
-        "INSERT INTO organizations (name, sector, is_default, created_by) VALUES ($1, $2, FALSE, $3) RETURNING id",
+        "INSERT INTO organizations (name, sector, is_default, created_by) VALUES ($1, $2, $3, $4) RETURNING id",
     )
-    .bind("Mi Organización")
-    .bind("General")
+    .bind(if is_first_org { "CoopAndes Digital" } else { "Mi Organización" })
+    .bind(if is_first_org { "Cooperativa / Financiero" } else { "General" })
+    .bind(is_first_org)
     .bind(user_id.0)
     .fetch_one(&state.pool)
     .await?;
@@ -122,6 +128,10 @@ pub async fn register(
         .bind(user_id.0)
         .execute(&state.pool)
         .await?;
+
+    if is_first_org {
+        insert_coopandes_risks(&state.pool, org_id.0, Some(user_id.0)).await?;
+    }
 
     let token = create_session(&state.pool, user_id.0, state.session_ttl_hours, &ip, &ua).await?;
     write_audit(
