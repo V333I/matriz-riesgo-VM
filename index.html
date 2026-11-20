@@ -1,0 +1,2438 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AndesShield | Matriz de Riesgos de Ciberseguridad — CoopAndes Digital</title>
+  <style>
+    :root {
+      --bg-app: #f1f5f9;
+      --bg-surface: #ffffff;
+      --bg-surface-2: #f8fafc;
+      --bg-elevated: #e2e8f0;
+      --border: #cbd5e1;
+      --border-subtle: #e2e8f0;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --accent-soft: rgba(2, 132, 199, 0.12);
+
+      /* Niveles de riesgo (Escala oficial) */
+      --risk-low: #16a34a;
+      --risk-low-bg: rgba(22, 163, 74, 0.15);
+      --risk-low-cell: #dcfce7;
+      --risk-low-text: #14532d;
+
+      --risk-med: #ca8a04;
+      --risk-med-bg: rgba(234, 179, 8, 0.18);
+      --risk-med-cell: #fef9c3;
+      --risk-med-text: #713f12;
+
+      --risk-high: #ea580c;
+      --risk-high-bg: rgba(249, 115, 22, 0.18);
+      --risk-high-cell: #ffedd5;
+      --risk-high-text: #7c2d12;
+
+      --risk-crit: #dc2626;
+      --risk-crit-bg: rgba(220, 38, 38, 0.18);
+      --risk-crit-cell: #fee2e2;
+      --risk-crit-text: #7f1d1d;
+
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    [data-theme="dark"] {
+      --bg-app: #0b1120;
+      --bg-surface: #111827;
+      --bg-surface-2: #1e293b;
+      --bg-elevated: #273549;
+      --border: #334155;
+      --border-subtle: #1f2937;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --accent-soft: rgba(56, 189, 248, 0.14);
+
+      --risk-low: #22c55e;
+      --risk-low-bg: rgba(34, 197, 94, 0.18);
+      --risk-low-cell: rgba(22, 163, 74, 0.28);
+      --risk-low-text: #86efac;
+
+      --risk-med: #facc15;
+      --risk-med-bg: rgba(250, 204, 21, 0.18);
+      --risk-med-cell: rgba(202, 138, 4, 0.32);
+      --risk-med-text: #fef08a;
+
+      --risk-high: #fb923c;
+      --risk-high-bg: rgba(249, 115, 22, 0.22);
+      --risk-high-cell: rgba(234, 88, 12, 0.36);
+      --risk-high-text: #fed7aa;
+
+      --risk-crit: #f87171;
+      --risk-crit-bg: rgba(239, 68, 68, 0.22);
+      --risk-crit-cell: rgba(220, 38, 38, 0.42);
+      --risk-crit-text: #fecaca;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background: var(--bg-app);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    /* Header */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .topbar-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .brand-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    button, .btn {
+      font-family: inherit;
+      font-size: 0.84rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-surface-2);
+      color: var(--text-primary);
+      padding: 0.5rem 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    button:hover {
+      background: var(--bg-elevated);
+      border-color: var(--accent);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0b1120;
+    }
+
+    [data-theme="light"] .btn-primary {
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .btn-danger {
+      color: var(--risk-crit);
+      border-color: rgba(220, 38, 38, 0.35);
+    }
+
+    .btn-danger:hover {
+      background: var(--risk-crit-bg);
+      border-color: var(--risk-crit);
+    }
+
+    .btn-sm {
+      padding: 0.32rem 0.6rem;
+      font-size: 0.78rem;
+    }
+
+    /* Main layout */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-size: 1.02rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    @media (max-width: 1024px) {
+      .kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 600px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--kpi-color, var(--accent));
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      line-height: 1.1;
+      color: var(--text-primary);
+    }
+
+    .kpi-meta {
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+    }
+
+    /* Analytics + Heatmap Grid */
+    .visual-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .visual-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Segmented Control */
+    .segmented {
+      display: inline-flex;
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .segmented button {
+      border: none;
+      background: transparent;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.78rem;
+      border-radius: 6px;
+      color: var(--text-secondary);
+    }
+
+    .segmented button.active {
+      background: var(--accent);
+      color: #0b1120;
+    }
+
+    [data-theme="light"] .segmented button.active {
+      color: #ffffff;
+    }
+
+    /* Heatmap 5x5 */
+    .heatmap-wrapper {
+      display: grid;
+      gap: 1.25rem;
+    }
+
+    .heatmap-wrapper.dual {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    @media (max-width: 820px) {
+      .heatmap-wrapper.dual {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .heatmap-box-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .heatmap-layout {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    .y-axis-title {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .heatmap-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 4px;
+      table-layout: fixed;
+    }
+
+    .heatmap-table th {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 0.25rem;
+      text-align: center;
+    }
+
+    .heatmap-table td {
+      height: 64px;
+      vertical-align: top;
+      border-radius: 8px;
+      padding: 0.3rem;
+      position: relative;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      transition: transform 0.12s ease;
+    }
+
+    .heatmap-table td:hover {
+      transform: scale(1.02);
+      z-index: 2;
+    }
+
+    .cell-score {
+      position: absolute;
+      bottom: 3px;
+      right: 5px;
+      font-size: 0.66rem;
+      font-weight: 700;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+
+    .cell-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .risk-chip {
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 0.12rem 0.38rem;
+      border-radius: 5px;
+      background: rgba(15, 23, 42, 0.85);
+      color: #ffffff;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      transition: transform 0.12s ease, background 0.12s ease;
+    }
+
+    .risk-chip:hover {
+      transform: scale(1.08);
+      background: var(--accent);
+      color: #0b1120;
+    }
+
+    .hm-low { background: var(--risk-low-cell); color: var(--risk-low-text); }
+    .hm-med { background: var(--risk-med-cell); color: var(--risk-med-text); }
+    .hm-high { background: var(--risk-high-cell); color: var(--risk-high-text); }
+    .hm-crit { background: var(--risk-crit-cell); color: var(--risk-crit-text); }
+
+    .x-axis-title {
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      padding-left: 28px;
+    }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.85rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.75rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--text-secondary);
+    }
+
+    .legend-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 3px;
+    }
+
+    /* Charts */
+    .charts-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .donut-container {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      min-width: 190px;
+    }
+
+    .donut-legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-size: 0.82rem;
+    }
+
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .bar-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      gap: 0.5rem;
+    }
+
+    .bar-tracks {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .bar-track {
+      height: 11px;
+      background: var(--bg-surface-2);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.35s ease;
+    }
+
+    .bar-fill.residual {
+      opacity: 0.88;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.16),
+        rgba(255, 255, 255, 0.16) 5px,
+        transparent 5px,
+        transparent 10px
+      );
+    }
+
+    /* Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 0.9rem;
+    }
+
+    .col-2 { grid-column: span 2; }
+    .col-3 { grid-column: span 3; }
+    .col-4 { grid-column: span 4; }
+    .col-5 { grid-column: span 5; }
+    .col-6 { grid-column: span 6; }
+    .col-8 { grid-column: span 8; }
+    .col-12 { grid-column: span 12; }
+
+    @media (max-width: 960px) {
+      .col-2, .col-3, .col-4, .col-5, .col-6, .col-8 {
+        grid-column: span 12;
+      }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .field label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+    }
+
+    .req {
+      color: var(--risk-crit);
+      font-weight: 700;
+    }
+
+    input[type="text"],
+    input[type="search"],
+    select,
+    textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 0.85rem;
+      padding: 0.55rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-surface-2);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 68px;
+    }
+
+    .field-error {
+      font-size: 0.75rem;
+      color: var(--risk-crit);
+      display: none;
+    }
+
+    .field.invalid input,
+    .field.invalid textarea,
+    .field.invalid select {
+      border-color: var(--risk-crit);
+    }
+
+    .field.invalid .field-error {
+      display: block;
+    }
+
+    /* Live Preview Box inside form */
+    .live-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.85rem;
+      padding: 0.9rem 1rem;
+      background: var(--bg-surface-2);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .preview-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .preview-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .preview-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-low { background: var(--risk-low-bg); color: var(--risk-low); border: 1px solid rgba(34, 197, 94, 0.35); }
+    .badge-med { background: var(--risk-med-bg); color: var(--risk-med); border: 1px solid rgba(234, 179, 8, 0.4); }
+    .badge-high { background: var(--risk-high-bg); color: var(--risk-high); border: 1px solid rgba(249, 115, 22, 0.4); }
+    .badge-crit { background: var(--risk-crit-bg); color: var(--risk-crit); border: 1px solid rgba(220, 38, 38, 0.45); }
+
+    .badge-env {
+      font-size: 0.68rem;
+      padding: 0.12rem 0.45rem;
+      border-radius: 5px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Filters bar */
+    .filters-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .filters-bar .search-box {
+      flex: 1 1 260px;
+    }
+
+    .filters-bar select {
+      width: auto;
+      min-width: 155px;
+    }
+
+    /* Data Table */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    table.risk-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      min-width: 1020px;
+    }
+
+    table.risk-table thead th {
+      background: var(--bg-surface-2);
+      color: var(--text-secondary);
+      font-weight: 700;
+      text-align: left;
+      padding: 0.7rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    table.risk-table thead th:hover {
+      color: var(--accent);
+    }
+
+    table.risk-table tbody td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: top;
+    }
+
+    table.risk-table tbody tr:hover {
+      background: var(--bg-surface-2);
+    }
+
+    table.risk-table tbody tr.highlight-row {
+      outline: 2px solid var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .cell-main {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .cell-sub {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .score-pill {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
+    }
+
+    .action-text {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .delta-positive {
+      color: var(--risk-low);
+      font-weight: 700;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .delta-neutral {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 0.3rem;
+      flex-wrap: nowrap;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 100;
+      backdrop-filter: blur(3px);
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      max-width: 760px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-md);
+      padding: 1.35rem;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.75rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+    }
+
+    @media (max-width: 640px) {
+      .modal-grid { grid-template-columns: 1fr; }
+    }
+
+    .detail-block {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem;
+    }
+
+    .detail-block h4 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.3rem;
+    }
+
+    .detail-block p {
+      font-size: 0.85rem;
+      color: var(--text-primary);
+    }
+
+    .qa-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+      margin-top: 0.6rem;
+    }
+
+    .qa-table th, .qa-table td {
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.65rem;
+      text-align: left;
+    }
+
+    .qa-table th {
+      background: var(--bg-surface-2);
+      color: var(--text-secondary);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--accent);
+      box-shadow: var(--shadow-md);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      font-size: 0.84rem;
+      font-weight: 600;
+      z-index: 120;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: all 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      padding: 1rem 1.5rem 2rem;
+    }
+
+    /* Print / PDF styles */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .topbar .toolbar,
+      #form-section,
+      .filters-bar,
+      .row-actions,
+      .no-print {
+        display: none !important;
+      }
+      .topbar {
+        position: static;
+        box-shadow: none;
+        border-bottom: 2px solid #0f172a;
+      }
+      .card, .kpi-card {
+        box-shadow: none;
+        break-inside: avoid;
+        border-color: #94a3b8;
+      }
+      .visual-grid {
+        grid-template-columns: 1fr;
+      }
+      table.risk-table {
+        min-width: 0;
+        font-size: 0.74rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <!-- Logotipo SVG personalizado: Escudo + Cordillera (AndesShield) -->
+        <svg class="brand-logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="shieldGrad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#0284c7" />
+              <stop offset="100%" stop-color="#22c55e" />
+            </linearGradient>
+          </defs>
+          <path d="M24 3L6 10.5V23.2C6 34.4 13.7 43.2 24 46C34.3 43.2 42 34.4 42 23.2V10.5L24 3Z" fill="url(#shieldGrad)" fill-opacity="0.18" stroke="url(#shieldGrad)" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M12 30L19.5 19L25 26L29.5 21L36 30H12Z" fill="url(#shieldGrad)" />
+          <circle cx="24" cy="13.5" r="2.2" fill="#38bdf8" />
+        </svg>
+        <div>
+          <div class="brand-title">
+            AndesShield
+            <span class="brand-tag">CoopAndes Digital</span>
+          </div>
+          <div class="brand-sub">Sistema de Matriz de Riesgos de Ciberseguridad · ISO/IEC 27001:2022 · Ley 21.663</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button type="button" id="btn-scale" title="Ver escala oficial de probabilidad e impacto">Escala 5×5</button>
+        <button type="button" id="btn-qa" title="Ejecutar los 5 casos de prueba de validación">Validación QA</button>
+        <button type="button" id="btn-csv" title="Descargar matriz en formato CSV para Excel">Exportar CSV</button>
+        <button type="button" id="btn-print" title="Imprimir o guardar como PDF">Imprimir / PDF</button>
+        <button type="button" id="btn-reset" title="Restaurar los 6 hallazgos oficiales de CoopAndes Digital">Restaurar Caso</button>
+        <button type="button" id="btn-theme" title="Alternar modo claro / oscuro">Modo Claro</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- KPIs -->
+    <section class="kpi-grid" aria-label="Indicadores clave de riesgo">
+      <div class="kpi-card" style="--kpi-color: var(--accent)">
+        <span class="kpi-label">Total Hallazgos</span>
+        <span class="kpi-value" id="kpi-total">0</span>
+        <span class="kpi-meta" id="kpi-avg">Promedio inherente: 0</span>
+      </div>
+      <div class="kpi-card" style="--kpi-color: var(--risk-crit)">
+        <span class="kpi-label">Críticos (17–25)</span>
+        <span class="kpi-value" id="kpi-crit">0</span>
+        <span class="kpi-meta" id="kpi-crit-res">Residuales: 0 · Intervenir ya</span>
+      </div>
+      <div class="kpi-card" style="--kpi-color: var(--risk-high)">
+        <span class="kpi-label">Altos (10–16)</span>
+        <span class="kpi-value" id="kpi-high">0</span>
+        <span class="kpi-meta" id="kpi-high-res">Residuales: 0 · Intervenir pronto</span>
+      </div>
+      <div class="kpi-card" style="--kpi-color: var(--risk-med)">
+        <span class="kpi-label">Medios (6–9)</span>
+        <span class="kpi-value" id="kpi-med">0</span>
+        <span class="kpi-meta" id="kpi-med-res">Residuales: 0 · Mejorar controles</span>
+      </div>
+      <div class="kpi-card" style="--kpi-color: var(--risk-low)">
+        <span class="kpi-label">Bajos (1–5)</span>
+        <span class="kpi-value" id="kpi-low">0</span>
+        <span class="kpi-meta" id="kpi-low-res">Residuales: 0 · Monitorear</span>
+      </div>
+      <div class="kpi-card" style="--kpi-color: #10b981">
+        <span class="kpi-label">Reducción Global</span>
+        <span class="kpi-value" id="kpi-reduction">0%</span>
+        <span class="kpi-meta" id="kpi-top-drop">Mayor baja: —</span>
+      </div>
+    </section>
+
+    <!-- VISUALIZATIONS: HEATMAP 5x5 + ANALYTICS -->
+    <section class="visual-grid">
+      <!-- Heatmap Card -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Matriz de Calor 5×5 (Probabilidad × Impacto)</h2>
+            <p class="card-subtitle">Haz clic en cualquier ID para inspeccionar justificación, control y mitigación.</p>
+          </div>
+          <div class="segmented no-print" role="group" aria-label="Modo de matriz de calor">
+            <button type="button" class="active" data-hm-mode="inherent">Inherente</button>
+            <button type="button" data-hm-mode="residual">Residual</button>
+            <button type="button" data-hm-mode="dual">Antes vs Después</button>
+          </div>
+        </div>
+
+        <div id="heatmap-container" class="heatmap-wrapper"></div>
+
+        <div class="legend-row">
+          <span class="legend-item"><span class="legend-dot" style="background: var(--risk-low)"></span> Bajo (1–5): Monitorear</span>
+          <span class="legend-item"><span class="legend-dot" style="background: var(--risk-med)"></span> Medio (6–9): Mejorar controles</span>
+          <span class="legend-item"><span class="legend-dot" style="background: var(--risk-high)"></span> Alto (10–16): Intervenir pronto</span>
+          <span class="legend-item"><span class="legend-dot" style="background: var(--risk-crit)"></span> Crítico (17–25): Intervenir ya</span>
+        </div>
+      </div>
+
+      <!-- Charts Card -->
+      <div class="card charts-stack">
+        <div>
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Distribución por Nivel de Riesgo</h2>
+              <p class="card-subtitle">Proporción actual de hallazgos clasificados</p>
+            </div>
+            <div class="segmented no-print" role="group" aria-label="Modo gráfico de torta">
+              <button type="button" class="active" data-donut-mode="inherent">Inherente</button>
+              <button type="button" data-donut-mode="residual">Residual</button>
+            </div>
+          </div>
+          <div id="donut-container" class="donut-container"></div>
+        </div>
+
+        <div>
+          <div class="card-header" style="margin-top: 0.25rem;">
+            <div>
+              <h2 class="card-title">Comparativa: Riesgo Inherente vs Residual</h2>
+              <p class="card-subtitle">Impacto visual de los controles propuestos (escala 1 a 25)</p>
+            </div>
+          </div>
+          <div id="comparison-bars" class="bar-chart"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RISK FORM -->
+    <section class="card" id="form-section">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title" id="form-title">Registrar Nuevo Hallazgo / Riesgo</h2>
+          <p class="card-subtitle">Cálculo automático de R = P × I con catálogo de amenazas y sugerencia de controles ISO/IEC 27001:2022.</p>
+        </div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+          <select id="threat-catalog" aria-label="Catálogo de amenazas predefinidas" style="width:auto; max-width:300px;">
+            <option value="">Catálogo de amenazas ISO 27001:2022...</option>
+          </select>
+          <button type="button" id="btn-apply-catalog" class="btn-sm">Sugerir Control ISO</button>
+        </div>
+      </div>
+
+      <form id="risk-form" novalidate>
+        <div class="form-grid">
+          <div class="field col-2" id="f-id">
+            <label for="inp-id">ID <span class="req">*</span></label>
+            <input type="text" id="inp-id" placeholder="Ej: R-07" required maxlength="16" />
+            <span class="field-error">Ingresa un ID único (ej. R-07).</span>
+          </div>
+
+          <div class="field col-4" id="f-asset">
+            <label for="inp-asset">Activo <span class="req">*</span></label>
+            <input type="text" id="inp-asset" placeholder="Ej: Bucket S3 de respaldos, Servidor VPN..." required />
+            <span class="field-error">El activo es obligatorio.</span>
+          </div>
+
+          <div class="field col-2">
+            <label for="inp-env">Entorno</label>
+            <select id="inp-env">
+              <option value="Cloud">Cloud</option>
+              <option value="On-Premise">On-Premise</option>
+              <option value="Híbrido">Híbrido</option>
+            </select>
+          </div>
+
+          <div class="field col-4" id="f-source">
+            <label for="inp-source">Fuente del dato <span class="req">* (Obligatoria)</span></label>
+            <input type="text" id="inp-source" placeholder="Ej: Verizon DBIR 2024 / Auditoría AWS Security Hub" required />
+            <span class="field-error">Debes justificar la evaluación con una fuente de datos.</span>
+          </div>
+
+          <div class="field col-6" id="f-threat">
+            <label for="inp-threat">Amenaza <span class="req">*</span></label>
+            <input type="text" id="inp-threat" placeholder="Ej: Exfiltración de datos financieros, ransomware, acceso no autorizado..." required />
+            <span class="field-error">La amenaza es obligatoria.</span>
+          </div>
+
+          <div class="field col-6" id="f-vuln">
+            <label for="inp-vuln">Vulnerabilidad <span class="req">*</span></label>
+            <input type="text" id="inp-vuln" placeholder="Ej: ACL pública, ausencia de MFA, puertos 22/3389 abiertos..." required />
+            <span class="field-error">La vulnerabilidad es obligatoria.</span>
+          </div>
+
+          <div class="field col-6">
+            <label for="inp-p">Probabilidad Inherente (P) <span class="req">*</span></label>
+            <select id="inp-p">
+              <option value="1">1 — Menos de 1 ataque al año en el sector</option>
+              <option value="2">2 — 1–2 ataques al año, vulnerabilidades menores</option>
+              <option value="3" selected>3 — 3–5 ataques al año, vulnerabilidades conocidas</option>
+              <option value="4">4 — 6–10 ataques al año, intentos documentados</option>
+              <option value="5">5 — Más de 10 ataques al año o intentos activos</option>
+            </select>
+          </div>
+
+          <div class="field col-6">
+            <label for="inp-i">Impacto Inherente (I) <span class="req">*</span></label>
+            <select id="inp-i">
+              <option value="1">1 — Menos de 50 usuarios, datos no clasificados</option>
+              <option value="2">2 — 50–500 usuarios, datos internos</option>
+              <option value="3">3 — 500–5.000 usuarios, datos personales</option>
+              <option value="4" selected>4 — 5.000–50.000 usuarios, datos financieros o sistemas críticos</option>
+              <option value="5">5 — Más de 50.000 usuarios, operación paralizada o violación legal</option>
+            </select>
+          </div>
+
+          <div class="field col-12" id="f-control">
+            <label for="inp-control">Control Propuesto (técnico, organizacional o normativo) <span class="req">*</span></label>
+            <textarea id="inp-control" placeholder="Describe el control de seguridad a implementar (incluye referencia ISO/IEC 27001:2022, CIS Controls o normativa chilena)..." required></textarea>
+            <span class="field-error">Debes indicar un control propuesto.</span>
+          </div>
+
+          <div class="field col-6">
+            <label for="inp-pr">Probabilidad Residual (P' post-control) <span class="req">*</span></label>
+            <select id="inp-pr">
+              <option value="1" selected>1 — Menos de 1 ataque al año en el sector</option>
+              <option value="2">2 — 1–2 ataques al año, vulnerabilidades menores</option>
+              <option value="3">3 — 3–5 ataques al año, vulnerabilidades conocidas</option>
+              <option value="4">4 — 6–10 ataques al año, intentos documentados</option>
+              <option value="5">5 — Más de 10 ataques al año o intentos activos</option>
+            </select>
+          </div>
+
+          <div class="field col-6">
+            <label for="inp-ir">Impacto Residual (I' post-control) <span class="req">*</span></label>
+            <select id="inp-ir">
+              <option value="1">1 — Menos de 50 usuarios, datos no clasificados</option>
+              <option value="2">2 — 50–500 usuarios, datos internos</option>
+              <option value="3" selected>3 — 500–5.000 usuarios, datos personales</option>
+              <option value="4">4 — 5.000–50.000 usuarios, datos financieros o sistemas críticos</option>
+              <option value="5">5 — Más de 50.000 usuarios, operación paralizada o violación legal</option>
+            </select>
+          </div>
+
+          <!-- Live Calculation Preview -->
+          <div class="col-12 live-preview" aria-live="polite">
+            <div class="preview-box">
+              <span class="preview-label">Riesgo Inherente (R = P × I)</span>
+              <div class="preview-row" id="preview-inherent"></div>
+            </div>
+            <div class="preview-box">
+              <span class="preview-label">Riesgo Residual (R' = P' × I')</span>
+              <div class="preview-row" id="preview-residual"></div>
+            </div>
+            <div class="preview-box">
+              <span class="preview-label">Eficacia del Control</span>
+              <div class="preview-row" id="preview-delta"></div>
+            </div>
+          </div>
+
+          <div class="col-12" style="display:flex; gap:0.6rem; justify-content:flex-end; flex-wrap:wrap;">
+            <button type="button" id="btn-cancel-edit" style="display:none;">Cancelar Edición</button>
+            <button type="button" id="btn-clear-form">Limpiar Formulario</button>
+            <button type="submit" class="btn-primary" id="btn-submit">Guardar Riesgo en Matriz</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- RISK TABLE -->
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Registro Priorizado de Riesgos — CoopAndes Digital</h2>
+          <p class="card-subtitle">Ordenado de mayor a menor riesgo inherente. Haz clic en los encabezados para reordenar.</p>
+        </div>
+        <span class="badge badge-env" id="table-count">0 registros</span>
+      </div>
+
+      <div class="filters-bar no-print">
+        <input type="search" id="filter-search" class="search-box" placeholder="Buscar por ID, activo, amenaza, vulnerabilidad, fuente o control..." />
+        <select id="filter-level" aria-label="Filtrar por nivel de riesgo inherente">
+          <option value="ALL">Nivel: Todos</option>
+          <option value="Crítico">Crítico (17–25)</option>
+          <option value="Alto">Alto (10–16)</option>
+          <option value="Medio">Medio (6–9)</option>
+          <option value="Bajo">Bajo (1–5)</option>
+        </select>
+        <select id="filter-env" aria-label="Filtrar por entorno">
+          <option value="ALL">Entorno: Todos</option>
+          <option value="Cloud">Cloud</option>
+          <option value="On-Premise">On-Premise</option>
+          <option value="Híbrido">Híbrido</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th data-sort="id">ID ↕</th>
+              <th data-sort="asset">Activo / Entorno ↕</th>
+              <th data-sort="threat">Amenaza y Vulnerabilidad ↕</th>
+              <th>Fuente del Dato</th>
+              <th data-sort="inherent">Riesgo Inherente ↕</th>
+              <th>Control Propuesto</th>
+              <th data-sort="residual">Riesgo Residual ↕</th>
+              <th data-sort="reduction">Reducción ↕</th>
+              <th class="no-print">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="risk-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    AndesShield · Sistema Web Estático de Matriz de Riesgos (Single-File HTML/CSS/JS, sin librerías externas) · Caso CoopAndes Digital · Víctor Manzano · Diseño de Arquitectura de Redes Seguras
+  </footer>
+
+  <!-- MODAL: ESCALA DE REFERENCIA -->
+  <div class="modal-backdrop" id="modal-scale" role="dialog" aria-modal="true" aria-labelledby="modal-scale-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-scale-title">Escala Oficial de Referencia (Guía Didáctica: Cálculo de Riesgos)</h3>
+        <button type="button" class="btn-sm" data-close-modal="modal-scale">Cerrar ✕</button>
+      </div>
+      <table class="qa-table">
+        <thead>
+          <tr>
+            <th>Nivel</th>
+            <th>Probabilidad (P)</th>
+            <th>Impacto (I)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>1</strong></td><td>Menos de 1 ataque al año en el sector</td><td>Menos de 50 usuarios, datos no clasificados</td></tr>
+          <tr><td><strong>2</strong></td><td>1–2 ataques al año, vulnerabilidades menores</td><td>50–500 usuarios, datos internos</td></tr>
+          <tr><td><strong>3</strong></td><td>3–5 ataques al año, vulnerabilidades conocidas</td><td>500–5.000 usuarios, datos personales</td></tr>
+          <tr><td><strong>4</strong></td><td>6–10 ataques al año, intentos documentados</td><td>5.000–50.000 usuarios, datos financieros o sistemas críticos</td></tr>
+          <tr><td><strong>5</strong></td><td>Más de 10 ataques al año o intentos activos</td><td>Más de 50.000 usuarios, operación paralizada o violación legal</td></tr>
+        </tbody>
+      </table>
+      <table class="qa-table" style="margin-top:1rem;">
+        <thead>
+          <tr>
+            <th>Nivel de Riesgo</th>
+            <th>Rango (R = P × I)</th>
+            <th>Color</th>
+            <th>Acción Recomendada</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="badge badge-low">Bajo</span></td><td>1 – 5</td><td>Verde</td><td>Monitorear</td></tr>
+          <tr><td><span class="badge badge-med">Medio</span></td><td>6 – 9</td><td>Amarillo</td><td>Mejorar controles</td></tr>
+          <tr><td><span class="badge badge-high">Alto</span></td><td>10 – 16</td><td>Naranjo</td><td>Intervenir pronto</td></tr>
+          <tr><td><span class="badge badge-crit">Crítico</span></td><td>17 – 25</td><td>Rojo</td><td>Intervenir ya</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL: VALIDACIÓN QA -->
+  <div class="modal-backdrop" id="modal-qa" role="dialog" aria-modal="true" aria-labelledby="modal-qa-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-qa-title">Validación Automatizada — Casos de Prueba Oficiales</h3>
+        <button type="button" class="btn-sm" data-close-modal="modal-qa">Cerrar ✕</button>
+      </div>
+      <p style="font-size:0.84rem; color:var(--text-secondary);">
+        Verificación directa sobre la función <code>clasificarRiesgo(P, I)</code> del sistema frente a los 5 casos exigidos en la guía de actividad:
+      </p>
+      <table class="qa-table">
+        <thead>
+          <tr>
+            <th>Probabilidad (P)</th>
+            <th>Impacto (I)</th>
+            <th>Resultado Esperado</th>
+            <th>Resultado Obtenido</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="qa-tbody"></tbody>
+      </table>
+      <div id="qa-summary" style="margin-top:0.9rem; font-size:0.85rem; font-weight:700;"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: DETALLE DEL RIESGO -->
+  <div class="modal-backdrop" id="modal-detail" role="dialog" aria-modal="true" aria-labelledby="modal-detail-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-detail-title">Detalle del Riesgo</h3>
+        <button type="button" class="btn-sm" data-close-modal="modal-detail">Cerrar ✕</button>
+      </div>
+      <div id="modal-detail-body"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const STORAGE_KEY = "andesshield_coopandes_risks_v1";
+      const THEME_KEY = "andesshield_theme_v1";
+
+      const PROB_LABELS = {
+        1: "Menos de 1 ataque al año en el sector",
+        2: "1–2 ataques al año, vulnerabilidades menores",
+        3: "3–5 ataques al año, vulnerabilidades conocidas",
+        4: "6–10 ataques al año, intentos documentados",
+        5: "Más de 10 ataques al año o intentos activos"
+      };
+
+      const IMP_LABELS = {
+        1: "Menos de 50 usuarios, datos no clasificados",
+        2: "50–500 usuarios, datos internos",
+        3: "500–5.000 usuarios, datos personales",
+        4: "5.000–50.000 usuarios, datos financieros o sistemas críticos",
+        5: "Más de 50.000 usuarios, operación paralizada o violación legal"
+      };
+
+      // Catálogo de amenazas predefinidas con sugerencia de controles ISO/IEC 27001:2022
+      const THREAT_CATALOG = [
+        {
+          id: "cat-s3",
+          label: "Exposición pública de almacenamiento Cloud (S3/Blob)",
+          env: "Cloud",
+          threat: "Exfiltración masiva de respaldos y fuga de datos financieros y personales",
+          vuln: "Política de bucket o ACL pública habilitada sin cifrado gestionado",
+          control: "Activar S3 Block Public Access a nivel de cuenta y bucket, aplicar políticas IAM de mínimo privilegio, cifrado SSE-KMS y alertas automáticas con AWS Config (ISO/IEC 27001:2022 A.5.15, A.8.24; CIS AWS 2.1.4)."
+        },
+        {
+          id: "cat-ports",
+          label: "Exposición de puertos administrativos SSH/RDP (0.0.0.0/0)",
+          env: "Cloud",
+          threat: "Fuerza bruta automatizada, credential stuffing e intrusión con ransomware",
+          vuln: "Security Group con puertos 22 (SSH) y 3389 (RDP) abiertos a Internet (0.0.0.0/0)",
+          control: "Cerrar reglas 0.0.0.0/0 en puertos 22 y 3389; usar AWS Systems Manager Session Manager o VPN corporativa con MFA y bastion host restringido por IP (ISO/IEC 27001:2022 A.8.20, A.8.22; CIS AWS 5.2 y 5.3)."
+        },
+        {
+          id: "cat-root",
+          label: "Compromiso de cuenta Root / privilegiada sin MFA",
+          env: "Cloud",
+          threat: "Toma de control total de la cuenta cloud (Account Takeover) y destrucción de recursos",
+          vuln: "Cuenta root sin MFA compartida entre múltiples operadores sin trazabilidad",
+          control: "Habilitar MFA de hardware (FIDO2) en cuenta root, resguardar credenciales en bóveda break-glass, eliminar su uso diario y crear cuentas IAM nominadas con MFA y RBAC (ISO/IEC 27001:2022 A.5.17, A.8.2, A.8.5; CIS AWS 1.4 y 1.5)."
+        },
+        {
+          id: "cat-db",
+          label: "Base de datos expuesta a Internet y sin cifrado en reposo",
+          env: "Cloud",
+          threat: "Acceso directo no autorizado a BD, robo de snapshots y filtración de datos de socios",
+          vuln: "Instancia de base de datos con IP pública y almacenamiento sin cifrar",
+          control: "Mover la BD a subred privada sin IP pública, restringir acceso solo al Security Group de aplicación, activar cifrado AES-256 (KMS) en reposo y TLS 1.3 obligatorio en tránsito (ISO/IEC 27001:2022 A.8.20, A.8.24; CIS AWS 2.3.1)."
+        },
+        {
+          id: "cat-logs",
+          label: "Ausencia de registro de auditoría y monitoreo (Logging)",
+          env: "Cloud",
+          threat: "Persistencia encubierta de atacantes, abuso de privilegios e imposibilidad forense",
+          vuln: "CloudTrail, VPC Flow Logs y SIEM desactivados o sin retención inmutable",
+          control: "Habilitar AWS CloudTrail multi-región con validación de integridad y bucket S3 inmutable (Object Lock), activar VPC Flow Logs y correlacionar eventos en SIEM (ISO/IEC 27001:2022 A.8.15, A.8.16; Ley 21.663)."
+        },
+        {
+          id: "cat-rack",
+          label: "Acceso físico sin control y respaldos sin pruebas de restauración",
+          env: "On-Premise",
+          threat: "Manipulación o robo físico de servidores/discos y pérdida irreversible ante fallas o ransomware",
+          vuln: "Rack sin cerradura ni bitácora de acceso y respaldos sin validación periódica de RTO/RPO",
+          control: "Instalar control de acceso físico (tarjeta/biométrico + CCTV + bitácora), implementar estrategia de respaldos 3-2-1-1-0 inmutable y ejecutar pruebas trimestrales de restauración (ISO/IEC 27001:2022 A.7.2, A.7.4, A.8.13)."
+        },
+        {
+          id: "cat-phish",
+          label: "Phishing dirigido / Ingeniería social contra colaboradores",
+          env: "Híbrido",
+          threat: "Robo de credenciales corporativas y acceso inicial a sistemas financieros",
+          vuln: "Falta de filtros anti-phishing (DMARC/SPF/DKIM) y capacitación insuficiente",
+          control: "Configurar SPF, DKIM y DMARC en modo reject, aplicar MFA resistente a phishing (FIDO2) y realizar campañas periódicas de concientización (ISO/IEC 27001:2022 A.6.3, A.8.5, A.8.23)."
+        },
+        {
+          id: "cat-owasp",
+          label: "Explotación web (Inyección SQL / XSS / APIs sin autenticar)",
+          env: "Cloud",
+          threat: "Extracción o alteración de registros del portal web mediante peticiones maliciosas",
+          vuln: "Validación insuficiente de entradas y ausencia de WAF frente a aplicaciones expuestas",
+          control: "Aplicar consultas parametrizadas, pruebas SAST/DAST en CI/CD y desplegar WAF con reglas OWASP CRS (ISO/IEC 27001:2022 A.8.25, A.8.28)."
+        }
+      ];
+
+      // 6 Hallazgos oficiales del caso CoopAndes Digital (precargados por defecto)
+      const DEFAULT_COOPANDES_RISKS = [
+        {
+          id: "R-01",
+          asset: "Bucket S3 de respaldos corporativos",
+          env: "Cloud",
+          threat: "Exfiltración masiva de respaldos y fuga de datos financieros/personales de socios",
+          vuln: "Bucket S3 configurado con acceso público de lectura (ACL/política abierta sin Block Public Access)",
+          p: 5,
+          i: 5,
+          source: "Verizon DBIR 2024 e IBM Cost of a Data Breach 2024 (misconfiguración cloud y escaneos automatizados continuos) + Auditoría AWS Security Hub CoopAndes Digital",
+          control: "Activar AWS S3 Block Public Access a nivel de cuenta y bucket, revocar permisos públicos, aplicar IAM de mínimo privilegio, habilitar cifrado SSE-KMS y monitoreo continuo con AWS Config (ISO/IEC 27001:2022 A.5.15, A.8.24; CIS AWS 2.1.4; Ley 21.719).",
+          pr: 1,
+          ir: 3
+        },
+        {
+          id: "R-02",
+          asset: "Servidores Cloud (EC2) y Security Group perimetral",
+          env: "Cloud",
+          threat: "Ataques automatizados de fuerza bruta, explotación remota y despliegue de ransomware",
+          vuln: "Security Group con puertos administrativos SSH (22) y RDP (3389) abiertos a 0.0.0.0/0",
+          p: 5,
+          i: 4,
+          source: "CISA & GreyNoise Threat Intelligence 2024 (intentos diarios activos contra puertos 22/3389 expuestos) + Revisión de reglas VPC CoopAndes Digital",
+          control: "Eliminar reglas de entrada 0.0.0.0/0 en puertos 22 y 3389; migrar la administración a AWS Systems Manager Session Manager o VPN corporativa con MFA y bastion restringido por IP (ISO/IEC 27001:2022 A.8.20, A.8.22; CIS AWS 5.2 y 5.3).",
+          pr: 1,
+          ir: 3
+        },
+        {
+          id: "R-03",
+          asset: "Cuenta Root de la infraestructura Cloud",
+          env: "Cloud",
+          threat: "Toma de control total de la nube (Account Takeover), eliminación de servicios o secuestro de cuenta",
+          vuln: "Cuenta root sin autenticación multifactor (MFA) y compartida por tres personas sin trazabilidad",
+          p: 4,
+          i: 5,
+          source: "Microsoft Digital Defense Report 2024 & Verizon DBIR 2024 (robo de credenciales sin MFA como vector crítico; MFA bloquea >99% de intrusiones automatizadas) + Revisión IAM CoopAndes Digital",
+          control: "Activar MFA de hardware (FIDO2/YubiKey) en la cuenta root, rotar y custodiar la clave en bóveda de emergencia (break-glass), prohibir su uso diario y crear usuarios IAM individuales con MFA obligatorio y RBAC (ISO/IEC 27001:2022 A.5.17, A.8.2, A.8.5; CIS AWS 1.4 y 1.5).",
+          pr: 1,
+          ir: 4
+        },
+        {
+          id: "R-04",
+          asset: "Base de datos del portal web de socios",
+          env: "Cloud",
+          threat: "Acceso directo no autorizado desde Internet, robo de credenciales/datos y lectura de snapshots sin cifrar",
+          vuln: "Instancia de base de datos desplegada con IP pública y almacenamiento en reposo sin cifrar",
+          p: 4,
+          i: 5,
+          source: "Cloud Security Alliance (CSA) Top Threats 2024 y OWASP Top 10 + Escaneo de superficie de ataque externa de CoopAndes Digital",
+          control: "Reubicar la base de datos en subred privada sin IP pública (acceso exclusivo desde el Security Group de aplicación), habilitar cifrado en reposo AES-256 con KMS y cifrado en tránsito obligatorio TLS 1.3 (ISO/IEC 27001:2022 A.8.20, A.8.24; CIS AWS 2.3.1 y 2.3.3).",
+          pr: 1,
+          ir: 4
+        },
+        {
+          id: "R-05",
+          asset: "Plano de control y servicios Cloud (IAM, VPC, S3, RDS)",
+          env: "Cloud",
+          threat: "Actividad maliciosa encubierta, escalación de privilegios no detectada e imposibilidad de auditoría forense",
+          vuln: "Ausencia total de registro de actividad en la nube (CloudTrail, VPC Flow Logs y SIEM desactivados)",
+          p: 3,
+          i: 4,
+          source: "IBM Cost of a Data Breach Report 2024 (tiempo medio de detección >190 días sin telemetría) y Ley 21.663 Marco de Ciberseguridad de Chile (obligación de trazabilidad y reporte al CSIRT Nacional)",
+          control: "Activar AWS CloudTrail multi-región con validación de integridad y bucket S3 inmutable (Object Lock), habilitar VPC Flow Logs y centralizar alertas en SIEM con retención mínima de 1 año (ISO/IEC 27001:2022 A.8.15, A.8.16; CIS AWS 3.1).",
+          pr: 1,
+          ir: 3
+        },
+        {
+          id: "R-06",
+          asset: "Rack On-Premise y respaldos locales",
+          env: "On-Premise",
+          threat: "Manipulación física no autorizada, robo de equipos y pérdida irreversible de datos ante fallas o ransomware",
+          vuln: "Rack on-premise sin control de acceso físico y respaldos sin pruebas periódicas de restauración",
+          p: 3,
+          i: 4,
+          source: "Veeam Data Protection Trends Report 2024 (fallos recurrentes en restauraciones no probadas) + Inspección física de sala de comunicaciones de CoopAndes Digital",
+          control: "Implementar cerradura electrónica con tarjeta/biometría, bitácora y CCTV en sala de servidores; adoptar estrategia de respaldo 3-2-1-1-0 (copia inmutable/offline) y ejecutar simulacros trimestrales de restauración validando RTO/RPO (ISO/IEC 27001:2022 A.7.2, A.7.4, A.8.13).",
+          pr: 2,
+          ir: 3
+        }
+      ];
+
+      // Casos de prueba oficiales del documento
+      const QA_TEST_CASES = [
+        { p: 4, i: 5, expectedScore: 20, expectedLevel: "Crítico" },
+        { p: 2, i: 3, expectedScore: 6,  expectedLevel: "Medio" },
+        { p: 3, i: 5, expectedScore: 15, expectedLevel: "Alto" },
+        { p: 4, i: 4, expectedScore: 16, expectedLevel: "Alto" },
+        { p: 1, i: 5, expectedScore: 5,  expectedLevel: "Bajo" }
+      ];
+
+      // Estado de la aplicación
+      let risks = [];
+      let editingId = null;
+      let heatmapMode = "inherent"; // inherent | residual | dual
+      let donutMode = "inherent";   // inherent | residual
+      let sortState = { key: "inherent", dir: "desc" };
+
+      // Clasificación oficial: R = P * I
+      function clasificarRiesgo(p, i) {
+        const prob = Number(p);
+        const imp = Number(i);
+        const score = prob * imp;
+
+        if (score <= 5) {
+          return {
+            score,
+            level: "Bajo",
+            action: "Monitorear",
+            badgeClass: "badge-low",
+            cellClass: "hm-low",
+            color: "var(--risk-low)",
+            hex: "#22c55e"
+          };
+        }
+        if (score <= 9) {
+          return {
+            score,
+            level: "Medio",
+            action: "Mejorar controles",
+            badgeClass: "badge-med",
+            cellClass: "hm-med",
+            color: "var(--risk-med)",
+            hex: "#eab308"
+          };
+        }
+        if (score <= 16) {
+          return {
+            score,
+            level: "Alto",
+            action: "Intervenir pronto",
+            badgeClass: "badge-high",
+            cellClass: "hm-high",
+            color: "var(--risk-high)",
+            hex: "#f97316"
+          };
+        }
+        return {
+          score,
+          level: "Crítico",
+          action: "Intervenir ya",
+          badgeClass: "badge-crit",
+          cellClass: "hm-crit",
+          color: "var(--risk-crit)",
+          hex: "#dc2626"
+        };
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function showToast(msg) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => el.classList.remove("show"), 2800);
+      }
+
+      function loadRisks() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              return parsed;
+            }
+          }
+        } catch (e) {
+          console.warn("No se pudo leer localStorage:", e);
+        }
+        return JSON.parse(JSON.stringify(DEFAULT_COOPANDES_RISKS));
+      }
+
+      function saveRisks() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(risks));
+        } catch (e) {
+          console.warn("No se pudo guardar en localStorage:", e);
+        }
+      }
+
+      function suggestNextId() {
+        let maxNum = 0;
+        for (const r of risks) {
+          const m = String(r.id).match(/(\d+)/);
+          if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+        }
+        return "R-" + String(maxNum + 1).padStart(2, "0");
+      }
+
+      // Render KPIs
+      function renderKPIs() {
+        const total = risks.length;
+        const countsInh = { "Crítico": 0, "Alto": 0, "Medio": 0, "Bajo": 0 };
+        const countsRes = { "Crítico": 0, "Alto": 0, "Medio": 0, "Bajo": 0 };
+        let sumInh = 0;
+        let sumRes = 0;
+        let bestDrop = null;
+
+        risks.forEach(r => {
+          const inh = clasificarRiesgo(r.p, r.i);
+          const res = clasificarRiesgo(r.pr, r.ir);
+          countsInh[inh.level]++;
+          countsRes[res.level]++;
+          sumInh += inh.score;
+          sumRes += res.score;
+          const drop = inh.score - res.score;
+          if (!bestDrop || drop > bestDrop.drop) {
+            bestDrop = { id: r.id, drop, from: inh.score, to: res.score };
+          }
+        });
+
+        const avgInh = total ? (sumInh / total).toFixed(1) : "0.0";
+        const avgRes = total ? (sumRes / total).toFixed(1) : "0.0";
+        const reductionPct = sumInh > 0 ? Math.round(((sumInh - sumRes) / sumInh) * 100) : 0;
+
+        document.getElementById("kpi-total").textContent = total;
+        document.getElementById("kpi-avg").textContent = `Prom. Inherente: ${avgInh} → Residual: ${avgRes}`;
+
+        document.getElementById("kpi-crit").textContent = countsInh["Crítico"];
+        document.getElementById("kpi-crit-res").textContent = `Residuales: ${countsRes["Crítico"]} · Intervenir ya`;
+
+        document.getElementById("kpi-high").textContent = countsInh["Alto"];
+        document.getElementById("kpi-high-res").textContent = `Residuales: ${countsRes["Alto"]} · Intervenir pronto`;
+
+        document.getElementById("kpi-med").textContent = countsInh["Medio"];
+        document.getElementById("kpi-med-res").textContent = `Residuales: ${countsRes["Medio"]} · Mejorar controles`;
+
+        document.getElementById("kpi-low").textContent = countsInh["Bajo"];
+        document.getElementById("kpi-low-res").textContent = `Residuales: ${countsRes["Bajo"]} · Monitorear`;
+
+        document.getElementById("kpi-reduction").textContent = `${reductionPct}%`;
+        document.getElementById("kpi-top-drop").textContent = bestDrop
+          ? `Mayor baja: ${bestDrop.id} (${bestDrop.from} → ${bestDrop.to})`
+          : "Mayor baja: —";
+      }
+
+      // Build single 5x5 Heatmap HTML
+      function buildHeatmapHTML(mode, title) {
+        const grid = {};
+        for (let p = 1; p <= 5; p++) {
+          for (let i = 1; i <= 5; i++) {
+            grid[`${p}-${i}`] = [];
+          }
+        }
+        risks.forEach(r => {
+          const pVal = mode === "residual" ? r.pr : r.p;
+          const iVal = mode === "residual" ? r.ir : r.i;
+          const key = `${pVal}-${iVal}`;
+          if (grid[key]) grid[key].push(r);
+        });
+
+        let rowsHtml = "";
+        for (let p = 5; p >= 1; p--) {
+          rowsHtml += `<tr><th>P${p}</th>`;
+          for (let i = 1; i <= 5; i++) {
+            const info = clasificarRiesgo(p, i);
+            const items = grid[`${p}-${i}`];
+            const chips = items.map(r => {
+              const titleAttr = `${r.id}: ${r.asset} (${p}×${i}=${info.score} ${info.level})`;
+              return `<span class="risk-chip" data-detail-id="${escapeHtml(r.id)}" title="${escapeHtml(titleAttr)}">${escapeHtml(r.id)}</span>`;
+            }).join("");
+            rowsHtml += `
+              <td class="${info.cellClass}" title="P=${p}, I=${i} → R=${info.score} (${info.level} · ${info.action})">
+                <div class="cell-chips">${chips}</div>
+                <span class="cell-score">${info.score}</span>
+              </td>`;
+          }
+          rowsHtml += `</tr>`;
+        }
+
+        return `
+          <div>
+            ${title ? `<div class="heatmap-box-title"><span>${title}</span></div>` : ""}
+            <div class="heatmap-layout">
+              <div class="y-axis-title">Probabilidad (P)</div>
+              <table class="heatmap-table" aria-label="Matriz de calor 5 por 5">
+                <tbody>
+                  ${rowsHtml}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th></th>
+                    <th>I1</th>
+                    <th>I2</th>
+                    <th>I3</th>
+                    <th>I4</th>
+                    <th>I5</th>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div class="x-axis-title">Impacto (I)</div>
+          </div>
+        `;
+      }
+
+      function renderHeatmaps() {
+        const container = document.getElementById("heatmap-container");
+        if (heatmapMode === "dual") {
+          container.classList.add("dual");
+          container.innerHTML =
+            buildHeatmapHTML("inherent", "Antes del Control (Inherente)") +
+            buildHeatmapHTML("residual", "Después del Control (Residual)");
+        } else {
+          container.classList.remove("dual");
+          const label = heatmapMode === "residual"
+            ? "Matriz de Riesgo Residual (Post-Controles)"
+            : "Matriz de Riesgo Inherente (Sin Controles)";
+          container.innerHTML = buildHeatmapHTML(heatmapMode, label);
+        }
+      }
+
+      // Render SVG Donut Chart (zero external libraries)
+      function renderDonut() {
+        const container = document.getElementById("donut-container");
+        const order = [
+          { level: "Crítico", color: "#dc2626" },
+          { level: "Alto", color: "#f97316" },
+          { level: "Medio", color: "#eab308" },
+          { level: "Bajo", color: "#22c55e" }
+        ];
+
+        const counts = { "Crítico": 0, "Alto": 0, "Medio": 0, "Bajo": 0 };
+        risks.forEach(r => {
+          const info = donutMode === "residual"
+            ? clasificarRiesgo(r.pr, r.ir)
+            : clasificarRiesgo(r.p, r.i);
+          counts[info.level]++;
+        });
+
+        const total = risks.length;
+        const radius = 56;
+        const circumference = 2 * Math.PI * radius;
+        let offset = 0;
+        let segments = "";
+
+        if (total === 0) {
+          segments = `<circle cx="75" cy="75" r="${radius}" fill="none" stroke="var(--border)" stroke-width="18" />`;
+        } else {
+          order.forEach(item => {
+            const count = counts[item.level];
+            if (count <= 0) return;
+            const frac = count / total;
+            const dash = frac * circumference;
+            segments += `
+              <circle
+                cx="75" cy="75" r="${radius}"
+                fill="none"
+                stroke="${item.color}"
+                stroke-width="18"
+                stroke-dasharray="${dash} ${circumference - dash}"
+                stroke-dashoffset="${-offset}"
+                transform="rotate(-90 75 75)"
+              />`;
+            offset += dash;
+          });
+        }
+
+        const modeText = donutMode === "residual" ? "Residual" : "Inherente";
+
+        const legendHtml = order.map(item => {
+          const c = counts[item.level];
+          const pct = total ? Math.round((c / total) * 100) : 0;
+          return `
+            <div class="donut-legend-row">
+              <span class="legend-item">
+                <span class="legend-dot" style="background:${item.color}"></span>
+                <strong>${item.level}</strong>
+              </span>
+              <span>${c} <span style="color:var(--text-muted)">(${pct}%)</span></span>
+            </div>`;
+        }).join("");
+
+        container.innerHTML = `
+          <svg width="150" height="150" viewBox="0 0 150 150" aria-label="Gráfico de distribución de riesgos">
+            ${segments}
+            <text x="75" y="71" text-anchor="middle" fill="var(--text-primary)" font-size="24" font-weight="800">${total}</text>
+            <text x="75" y="90" text-anchor="middle" fill="var(--text-muted)" font-size="11" font-weight="600">${modeText}</text>
+          </svg>
+          <div class="donut-legend">${legendHtml}</div>
+        `;
+      }
+
+      // Render Inherent vs Residual Bar Comparison
+      function renderComparisonBars() {
+        const container = document.getElementById("comparison-bars");
+        if (risks.length === 0) {
+          container.innerHTML = `<p style="font-size:0.84rem; color:var(--text-muted);">No hay riesgos registrados.</p>`;
+          return;
+        }
+
+        const sorted = [...risks].sort((a, b) => (b.p * b.i) - (a.p * a.i) || a.id.localeCompare(b.id));
+
+        container.innerHTML = sorted.map(r => {
+          const inh = clasificarRiesgo(r.p, r.i);
+          const res = clasificarRiesgo(r.pr, r.ir);
+          const inhPct = (inh.score / 25) * 100;
+          const resPct = (res.score / 25) * 100;
+          const drop = inh.score - res.score;
+          const dropPct = inh.score > 0 ? Math.round((drop / inh.score) * 100) : 0;
+
+          return `
+            <div class="bar-item">
+              <div class="bar-item-header">
+                <span><strong>${escapeHtml(r.id)}</strong> · ${escapeHtml(r.asset)}</span>
+                <span class="delta-positive">${inh.score} → ${res.score} (${drop >= 0 ? "-" + dropPct : "+" + Math.abs(dropPct)}%)</span>
+              </div>
+              <div class="bar-tracks">
+                <div class="bar-track" title="Riesgo Inherente: ${inh.score} (${inh.level})">
+                  <div class="bar-fill" style="width:${inhPct}%; background:${inh.hex};"></div>
+                </div>
+                <div class="bar-track" title="Riesgo Residual: ${res.score} (${res.level})">
+                  <div class="bar-fill residual" style="width:${resPct}%; background:${res.hex};"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // Render Risk Table
+      function renderTable() {
+        const tbody = document.getElementById("risk-tbody");
+        const query = document.getElementById("filter-search").value.trim().toLowerCase();
+        const levelFilter = document.getElementById("filter-level").value;
+        const envFilter = document.getElementById("filter-env").value;
+
+        let filtered = risks.filter(r => {
+          const inh = clasificarRiesgo(r.p, r.i);
+          if (levelFilter !== "ALL" && inh.level !== levelFilter) return false;
+          if (envFilter !== "ALL" && r.env !== envFilter) return false;
+          if (query) {
+            const haystack = `${r.id} ${r.asset} ${r.env} ${r.threat} ${r.vuln} ${r.source} ${r.control}`.toLowerCase();
+            if (!haystack.includes(query)) return false;
+          }
+          return true;
+        });
+
+        // Sort
+        const dir = sortState.dir === "asc" ? 1 : -1;
+        filtered.sort((a, b) => {
+          const aInh = a.p * a.i;
+          const bInh = b.p * b.i;
+          const aRes = a.pr * a.ir;
+          const bRes = b.pr * b.ir;
+
+          switch (sortState.key) {
+            case "id": return a.id.localeCompare(b.id) * dir;
+            case "asset": return a.asset.localeCompare(b.asset) * dir;
+            case "threat": return a.threat.localeCompare(b.threat) * dir;
+            case "residual": return (aRes - bRes) * dir || (bInh - aInh);
+            case "reduction": return ((aInh - aRes) - (bInh - bRes)) * dir;
+            case "inherent":
+            default:
+              return (aInh - bInh) * dir || (b.i - a.i) || a.id.localeCompare(b.id);
+          }
+        });
+
+        document.getElementById("table-count").textContent = `${filtered.length} de ${risks.length} registros`;
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="9" style="text-align:center; padding:2rem; color:var(--text-muted);">
+                No se encontraron hallazgos con los filtros seleccionados.
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tbody.innerHTML = filtered.map(r => {
+          const inh = clasificarRiesgo(r.p, r.i);
+          const res = clasificarRiesgo(r.pr, r.ir);
+          const diff = inh.score - res.score;
+          const pct = inh.score > 0 ? Math.round((diff / inh.score) * 100) : 0;
+
+          return `
+            <tr data-row-id="${escapeHtml(r.id)}">
+              <td><strong>${escapeHtml(r.id)}</strong></td>
+              <td>
+                <div class="cell-main">${escapeHtml(r.asset)}</div>
+                <div style="margin-top:0.25rem;"><span class="badge-env">${escapeHtml(r.env || "Cloud")}</span></div>
+              </td>
+              <td>
+                <div class="cell-main">${escapeHtml(r.threat)}</div>
+                <div class="cell-sub"><strong>Vulnerabilidad:</strong> ${escapeHtml(r.vuln)}</div>
+              </td>
+              <td><div class="cell-sub" style="margin-top:0; color:var(--text-secondary);">${escapeHtml(r.source)}</div></td>
+              <td>
+                <div class="score-pill">
+                  <span class="badge ${inh.badgeClass}">${inh.score} · ${inh.level}</span>
+                  <span class="action-text">P:${r.p} × I:${r.i} · ${inh.action}</span>
+                </div>
+              </td>
+              <td><div class="cell-sub" style="margin-top:0; color:var(--text-secondary);">${escapeHtml(r.control)}</div></td>
+              <td>
+                <div class="score-pill">
+                  <span class="badge ${res.badgeClass}">${res.score} · ${res.level}</span>
+                  <span class="action-text">P':${r.pr} × I':${r.ir} · ${res.action}</span>
+                </div>
+              </td>
+              <td>
+                ${diff > 0
+                  ? `<span class="delta-positive">▼ -${diff} pts<br>(-${pct}%)</span>`
+                  : `<span class="delta-neutral">${diff === 0 ? "Sin cambio" : `+${Math.abs(diff)} pts`}</span>`
+                }
+              </td>
+              <td class="no-print">
+                <div class="row-actions">
+                  <button type="button" class="btn-sm" data-action="detail" data-id="${escapeHtml(r.id)}" title="Ver detalle">Ver</button>
+                  <button type="button" class="btn-sm" data-action="edit" data-id="${escapeHtml(r.id)}" title="Editar">Editar</button>
+                  <button type="button" class="btn-sm btn-danger" data-action="delete" data-id="${escapeHtml(r.id)}" title="Eliminar">✕</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      // Live form preview
+      function updateFormPreview() {
+        const p = Number(document.getElementById("inp-p").value);
+        const i = Number(document.getElementById("inp-i").value);
+        const pr = Number(document.getElementById("inp-pr").value);
+        const ir = Number(document.getElementById("inp-ir").value);
+
+        const inh = clasificarRiesgo(p, i);
+        const res = clasificarRiesgo(pr, ir);
+        const diff = inh.score - res.score;
+        const pct = inh.score > 0 ? Math.round((diff / inh.score) * 100) : 0;
+
+        document.getElementById("preview-inherent").innerHTML = `
+          <span class="badge ${inh.badgeClass}">${inh.score} — ${inh.level}</span>
+          <span class="action-text">Acción: ${inh.action}</span>
+        `;
+
+        document.getElementById("preview-residual").innerHTML = `
+          <span class="badge ${res.badgeClass}">${res.score} — ${res.level}</span>
+          <span class="action-text">Acción: ${res.action}</span>
+        `;
+
+        document.getElementById("preview-delta").innerHTML = diff >= 0
+          ? `<span class="delta-positive">Reducción: -${diff} puntos (-${pct}%)</span>`
+          : `<span style="color:var(--risk-crit); font-weight:700; font-size:0.8rem;">Atención: el riesgo residual supera al inherente (+${Math.abs(diff)})</span>`;
+      }
+
+      function clearForm() {
+        editingId = null;
+        document.getElementById("form-title").textContent = "Registrar Nuevo Hallazgo / Riesgo";
+        document.getElementById("btn-submit").textContent = "Guardar Riesgo en Matriz";
+        document.getElementById("btn-cancel-edit").style.display = "none";
+        document.getElementById("inp-id").value = suggestNextId();
+        document.getElementById("inp-id").readOnly = false;
+        document.getElementById("inp-asset").value = "";
+        document.getElementById("inp-env").value = "Cloud";
+        document.getElementById("inp-source").value = "";
+        document.getElementById("inp-threat").value = "";
+        document.getElementById("inp-vuln").value = "";
+        document.getElementById("inp-p").value = "3";
+        document.getElementById("inp-i").value = "4";
+        document.getElementById("inp-control").value = "";
+        document.getElementById("inp-pr").value = "1";
+        document.getElementById("inp-ir").value = "3";
+        document.getElementById("threat-catalog").value = "";
+        document.querySelectorAll(".field.invalid").forEach(f => f.classList.remove("invalid"));
+        updateFormPreview();
+      }
+
+      function startEdit(id) {
+        const risk = risks.find(r => r.id === id);
+        if (!risk) return;
+        editingId = id;
+        document.getElementById("form-title").textContent = `Editando Riesgo ${risk.id}`;
+        document.getElementById("btn-submit").textContent = "Actualizar Riesgo";
+        document.getElementById("btn-cancel-edit").style.display = "inline-flex";
+        document.getElementById("inp-id").value = risk.id;
+        document.getElementById("inp-id").readOnly = true;
+        document.getElementById("inp-asset").value = risk.asset;
+        document.getElementById("inp-env").value = risk.env || "Cloud";
+        document.getElementById("inp-source").value = risk.source;
+        document.getElementById("inp-threat").value = risk.threat;
+        document.getElementById("inp-vuln").value = risk.vuln;
+        document.getElementById("inp-p").value = String(risk.p);
+        document.getElementById("inp-i").value = String(risk.i);
+        document.getElementById("inp-control").value = risk.control;
+        document.getElementById("inp-pr").value = String(risk.pr);
+        document.getElementById("inp-ir").value = String(risk.ir);
+        document.querySelectorAll(".field.invalid").forEach(f => f.classList.remove("invalid"));
+        updateFormPreview();
+        document.getElementById("form-section").scrollIntoView({ behavior: "smooth" });
+      }
+
+      function openDetailModal(id) {
+        const r = risks.find(item => item.id === id);
+        if (!r) return;
+        const inh = clasificarRiesgo(r.p, r.i);
+        const res = clasificarRiesgo(r.pr, r.ir);
+        const diff = inh.score - res.score;
+        const pct = inh.score > 0 ? Math.round((diff / inh.score) * 100) : 0;
+
+        document.getElementById("modal-detail-title").textContent = `${r.id} — ${r.asset}`;
+        document.getElementById("modal-detail-body").innerHTML = `
+          <div class="modal-grid">
+            <div class="detail-block">
+              <h4>Riesgo Inherente (Sin Control)</h4>
+              <p><span class="badge ${inh.badgeClass}">${inh.score} — ${inh.level} (${inh.action})</span></p>
+              <p style="margin-top:0.4rem; font-size:0.78rem; color:var(--text-secondary);">
+                <strong>P = ${r.p}:</strong> ${PROB_LABELS[r.p]}<br>
+                <strong>I = ${r.i}:</strong> ${IMP_LABELS[r.i]}
+              </p>
+            </div>
+            <div class="detail-block">
+              <h4>Riesgo Residual (Post-Control)</h4>
+              <p>
+                <span class="badge ${res.badgeClass}">${res.score} — ${res.level} (${res.action})</span>
+                <span class="delta-positive" style="margin-left:0.4rem;">-${diff} pts (-${pct}%)</span>
+              </p>
+              <p style="margin-top:0.4rem; font-size:0.78rem; color:var(--text-secondary);">
+                <strong>P' = ${r.pr}:</strong> ${PROB_LABELS[r.pr]}<br>
+                <strong>I' = ${r.ir}:</strong> ${IMP_LABELS[r.ir]}
+              </p>
+            </div>
+            <div class="detail-block">
+              <h4>Amenaza</h4>
+              <p>${escapeHtml(r.threat)}</p>
+            </div>
+            <div class="detail-block">
+              <h4>Vulnerabilidad</h4>
+              <p>${escapeHtml(r.vuln)}</p>
+            </div>
+            <div class="detail-block" style="grid-column: 1 / -1;">
+              <h4>Fuente del Dato (Justificación)</h4>
+              <p>${escapeHtml(r.source)}</p>
+            </div>
+            <div class="detail-block" style="grid-column: 1 / -1;">
+              <h4>Control Propuesto (Arquitectura / ISO 27001:2022)</h4>
+              <p>${escapeHtml(r.control)}</p>
+            </div>
+          </div>
+        `;
+        openModal("modal-detail");
+      }
+
+      // QA Modal runner
+      function renderQA() {
+        const tbody = document.getElementById("qa-tbody");
+        let passed = 0;
+        tbody.innerHTML = QA_TEST_CASES.map(tc => {
+          const actual = clasificarRiesgo(tc.p, tc.i);
+          const ok = actual.score === tc.expectedScore && actual.level === tc.expectedLevel;
+          if (ok) passed++;
+          return `
+            <tr>
+              <td><strong>${tc.p}</strong></td>
+              <td><strong>${tc.i}</strong></td>
+              <td>${tc.expectedScore} – ${tc.expectedLevel}</td>
+              <td><span class="badge ${actual.badgeClass}">${actual.score} – ${actual.level}</span> (${actual.action})</td>
+              <td><strong style="color:${ok ? "var(--risk-low)" : "var(--risk-crit)"}">${ok ? "✓ PASS" : "✕ FAIL"}</strong></td>
+            </tr>
+          `;
+        }).join("");
+
+        const summary = document.getElementById("qa-summary");
+        summary.style.color = passed === QA_TEST_CASES.length ? "var(--risk-low)" : "var(--risk-crit)";
+        summary.textContent = `Resultado global: ${passed} de ${QA_TEST_CASES.length} casos aprobados correctamente.`;
+      }
+
+      // CSV Export (UTF-8 BOM for Excel)
+      function exportCSV() {
+        const headers = [
+          "ID", "Activo", "Entorno", "Amenaza", "Vulnerabilidad", "Fuente del Dato",
+          "P Inherente", "I Inherente", "R Inherente", "Nivel Inherente", "Acción Inherente",
+          "Control Propuesto", "P Residual", "I Residual", "R Residual", "Nivel Residual",
+          "Acción Residual", "Reducción (pts)", "Reducción (%)"
+        ];
+
+        const csvEscape = val => `"${String(val ?? "").replace(/"/g, '""')}"`;
+        const sorted = [...risks].sort((a, b) => (b.p * b.i) - (a.p * a.i));
+
+        const lines = [headers.map(csvEscape).join(";")];
+        sorted.forEach(r => {
+          const inh = clasificarRiesgo(r.p, r.i);
+          const res = clasificarRiesgo(r.pr, r.ir);
+          const diff = inh.score - res.score;
+          const pct = inh.score > 0 ? Math.round((diff / inh.score) * 100) : 0;
+          lines.push([
+            r.id, r.asset, r.env || "Cloud", r.threat, r.vuln, r.source,
+            r.p, r.i, inh.score, inh.level, inh.action,
+            r.control, r.pr, r.ir, res.score, res.level, res.action, diff, `${pct}%`
+          ].map(csvEscape).join(";"));
+        });
+
+        const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "matriz_riesgos_coopandes_digital.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("Archivo CSV exportado correctamente.");
+      }
+
+      function openModal(id) {
+        document.getElementById(id).classList.add("open");
+      }
+
+      function closeModal(id) {
+        document.getElementById(id).classList.remove("open");
+      }
+
+      function renderAll() {
+        renderKPIs();
+        renderHeatmaps();
+        renderDonut();
+        renderComparisonBars();
+        renderTable();
+      }
+
+      function initTheme() {
+        const saved = localStorage.getItem(THEME_KEY) || "dark";
+        document.documentElement.setAttribute("data-theme", saved);
+        document.getElementById("btn-theme").textContent = saved === "dark" ? "Modo Claro" : "Modo Oscuro";
+      }
+
+      function initCatalog() {
+        const sel = document.getElementById("threat-catalog");
+        THREAT_CATALOG.forEach(item => {
+          const opt = document.createElement("option");
+          opt.value = item.id;
+          opt.textContent = item.label;
+          sel.appendChild(opt);
+        });
+      }
+
+      // Event listeners
+      function bindEvents() {
+        // Theme toggle
+        document.getElementById("btn-theme").addEventListener("click", () => {
+          const current = document.documentElement.getAttribute("data-theme");
+          const next = current === "dark" ? "light" : "dark";
+          document.documentElement.setAttribute("data-theme", next);
+          localStorage.setItem(THEME_KEY, next);
+          document.getElementById("btn-theme").textContent = next === "dark" ? "Modo Claro" : "Modo Oscuro";
+        });
+
+        // Modals
+        document.getElementById("btn-scale").addEventListener("click", () => openModal("modal-scale"));
+        document.getElementById("btn-qa").addEventListener("click", () => {
+          renderQA();
+          openModal("modal-qa");
+        });
+        document.getElementById("btn-csv").addEventListener("click", exportCSV);
+        document.getElementById("btn-print").addEventListener("click", () => window.print());
+        document.getElementById("btn-reset").addEventListener("click", () => {
+          if (confirm("¿Deseas restaurar los 6 hallazgos oficiales del caso CoopAndes Digital? Se perderán los cambios locales.")) {
+            risks = JSON.parse(JSON.stringify(DEFAULT_COOPANDES_RISKS));
+            saveRisks();
+            clearForm();
+            renderAll();
+            showToast("Caso CoopAndes Digital restaurado (6 hallazgos).");
+          }
+        });
+
+        document.querySelectorAll("[data-close-modal]").forEach(btn => {
+          btn.addEventListener("click", () => closeModal(btn.getAttribute("data-close-modal")));
+        });
+
+        document.querySelectorAll(".modal-backdrop").forEach(backdrop => {
+          backdrop.addEventListener("click", e => {
+            if (e.target === backdrop) backdrop.classList.remove("open");
+          });
+        });
+
+        document.addEventListener("keydown", e => {
+          if (e.key === "Escape") {
+            document.querySelectorAll(".modal-backdrop.open").forEach(m => m.classList.remove("open"));
+          }
+        });
+
+        // Heatmap mode switch
+        document.querySelectorAll("[data-hm-mode]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            document.querySelectorAll("[data-hm-mode]").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            heatmapMode = btn.getAttribute("data-hm-mode");
+            renderHeatmaps();
+          });
+        });
+
+        // Donut mode switch
+        document.querySelectorAll("[data-donut-mode]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            document.querySelectorAll("[data-donut-mode]").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            donutMode = btn.getAttribute("data-donut-mode");
+            renderDonut();
+          });
+        });
+
+        // Heatmap chip clicks (event delegation)
+        document.getElementById("heatmap-container").addEventListener("click", e => {
+          const chip = e.target.closest("[data-detail-id]");
+          if (chip) {
+            openDetailModal(chip.getAttribute("data-detail-id"));
+          }
+        });
+
+        // Catalog apply
+        document.getElementById("btn-apply-catalog").addEventListener("click", () => {
+          const id = document.getElementById("threat-catalog").value;
+          const item = THREAT_CATALOG.find(c => c.id === id);
+          if (!item) {
+            showToast("Selecciona primero una amenaza del catálogo ISO 27001:2022.");
+            return;
+          }
+          document.getElementById("inp-env").value = item.env;
+          if (!document.getElementById("inp-threat").value.trim()) {
+            document.getElementById("inp-threat").value = item.threat;
+          }
+          if (!document.getElementById("inp-vuln").value.trim()) {
+            document.getElementById("inp-vuln").value = item.vuln;
+          }
+          document.getElementById("inp-control").value = item.control;
+          showToast("Control ISO/IEC 27001:2022 aplicado al formulario.");
+        });
+
+        // Live preview on select changes
+        ["inp-p", "inp-i", "inp-pr", "inp-ir"].forEach(id => {
+          document.getElementById(id).addEventListener("change", updateFormPreview);
+        });
+
+        document.getElementById("btn-clear-form").addEventListener("click", clearForm);
+        document.getElementById("btn-cancel-edit").addEventListener("click", clearForm);
+
+        // Form submit
+        document.getElementById("risk-form").addEventListener("submit", e => {
+          e.preventDefault();
+          const idVal = document.getElementById("inp-id").value.trim().toUpperCase();
+          const assetVal = document.getElementById("inp-asset").value.trim();
+          const envVal = document.getElementById("inp-env").value;
+          const sourceVal = document.getElementById("inp-source").value.trim();
+          const threatVal = document.getElementById("inp-threat").value.trim();
+          const vulnVal = document.getElementById("inp-vuln").value.trim();
+          const controlVal = document.getElementById("inp-control").value.trim();
+          const pVal = Number(document.getElementById("inp-p").value);
+          const iVal = Number(document.getElementById("inp-i").value);
+          const prVal = Number(document.getElementById("inp-pr").value);
+          const irVal = Number(document.getElementById("inp-ir").value);
+
+          // Validaciones
+          let valid = true;
+          const check = (wrapperId, condition) => {
+            const el = document.getElementById(wrapperId);
+            if (!condition) {
+              el.classList.add("invalid");
+              valid = false;
+            } else {
+              el.classList.remove("invalid");
+            }
+          };
+
+          const isDuplicateId = !editingId && risks.some(r => r.id.toUpperCase() === idVal);
+          check("f-id", idVal.length > 0 && !isDuplicateId);
+          check("f-asset", assetVal.length > 0);
+          check("f-source", sourceVal.length > 0);
+          check("f-threat", threatVal.length > 0);
+          check("f-vuln", vulnVal.length > 0);
+          check("f-control", controlVal.length > 0);
+
+          if (!valid) {
+            showToast(isDuplicateId
+              ? `El ID "${idVal}" ya existe. Usa otro identificador.`
+              : "Completa todos los campos obligatorios (incluida la fuente del dato).");
+            return;
+          }
+
+          const record = {
+            id: idVal,
+            asset: assetVal,
+            env: envVal,
+            threat: threatVal,
+            vuln: vulnVal,
+            p: pVal,
+            i: iVal,
+            source: sourceVal,
+            control: controlVal,
+            pr: prVal,
+            ir: irVal
+          };
+
+          if (editingId) {
+            const idx = risks.findIndex(r => r.id === editingId);
+            if (idx !== -1) risks[idx] = record;
+            showToast(`Riesgo ${record.id} actualizado correctamente.`);
+          } else {
+            risks.push(record);
+            showToast(`Riesgo ${record.id} agregado a la matriz.`);
+          }
+
+          saveRisks();
+          clearForm();
+          renderAll();
+        });
+
+        // Filters
+        ["filter-search", "filter-level", "filter-env"].forEach(id => {
+          document.getElementById(id).addEventListener("input", renderTable);
+          document.getElementById(id).addEventListener("change", renderTable);
+        });
+
+        // Table sorting
+        document.querySelectorAll("table.risk-table thead th[data-sort]").forEach(th => {
+          th.addEventListener("click", () => {
+            const key = th.getAttribute("data-sort");
+            if (sortState.key === key) {
+              sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+            } else {
+              sortState.key = key;
+              sortState.dir = (key === "id" || key === "asset" || key === "threat") ? "asc" : "desc";
+            }
+            renderTable();
+          });
+        });
+
+        // Table row actions
+        document.getElementById("risk-tbody").addEventListener("click", e => {
+          const btn = e.target.closest("button[data-action]");
+          if (!btn) return;
+          const action = btn.getAttribute("data-action");
+          const id = btn.getAttribute("data-id");
+
+          if (action === "detail") {
+            openDetailModal(id);
+          } else if (action === "edit") {
+            startEdit(id);
+          } else if (action === "delete") {
+            if (confirm(`¿Eliminar el riesgo ${id} de la matriz?`)) {
+              risks = risks.filter(r => r.id !== id);
+              saveRisks();
+              if (editingId === id) clearForm();
+              renderAll();
+              showToast(`Riesgo ${id} eliminado.`);
+            }
+          }
+        });
+      }
+
+      // Bootstrap
+      initTheme();
+      initCatalog();
+      risks = loadRisks();
+      bindEvents();
+      clearForm();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
