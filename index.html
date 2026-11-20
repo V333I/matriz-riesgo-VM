@@ -921,29 +921,239 @@
       color: var(--text-secondary);
     }
 
-    /* Toast */
+    /* SweetAlert2-style Native Dialogs & Toasts */
+    .swal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.72);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 200;
+    }
+
+    .swal-backdrop.open {
+      display: flex;
+      animation: swalFadeIn 0.18s ease forwards;
+    }
+
+    @keyframes swalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes swalPop {
+      0%   { opacity: 0; transform: scale(0.78) translateY(8px); }
+      70%  { opacity: 1; transform: scale(1.03) translateY(0); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes swalIconBounce {
+      0%   { transform: scale(0.5); opacity: 0; }
+      65%  { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .swal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      padding: 2rem 1.75rem 1.6rem;
+      text-align: center;
+      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.45);
+      animation: swalPop 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .swal-icon-wrap {
+      width: 74px;
+      height: 74px;
+      margin: 0 auto 1.15rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: swalIconBounce 0.36s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .swal-icon-wrap.warning {
+      background: rgba(245, 158, 11, 0.14);
+      border: 3px solid #f59e0b;
+      color: #f59e0b;
+    }
+
+    .swal-icon-wrap.error {
+      background: rgba(239, 68, 68, 0.14);
+      border: 3px solid #ef4444;
+      color: #ef4444;
+    }
+
+    .swal-icon-wrap.success {
+      background: rgba(34, 197, 94, 0.14);
+      border: 3px solid #22c55e;
+      color: #22c55e;
+    }
+
+    .swal-icon-wrap.info,
+    .swal-icon-wrap.question {
+      background: rgba(56, 189, 248, 0.14);
+      border: 3px solid var(--accent);
+      color: var(--accent);
+    }
+
+    .swal-icon-wrap svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    .swal-title {
+      font-size: 1.22rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.015em;
+    }
+
+    .swal-text {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      margin-bottom: 1.5rem;
+    }
+
+    .swal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+
+    .swal-btn {
+      min-width: 118px;
+      justify-content: center;
+      padding: 0.62rem 1.25rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.12s ease, filter 0.15s ease, background 0.15s ease;
+    }
+
+    .swal-btn:active {
+      transform: scale(0.97);
+    }
+
+    .swal-btn-confirm {
+      background: var(--accent);
+      color: #0b1120;
+    }
+
+    [data-theme="light"] .swal-btn-confirm {
+      color: #ffffff;
+    }
+
+    .swal-btn-confirm.danger {
+      background: #dc2626;
+      color: #ffffff;
+    }
+
+    .swal-btn-confirm.warning {
+      background: #d97706;
+      color: #ffffff;
+    }
+
+    .swal-btn-confirm.success {
+      background: #16a34a;
+      color: #ffffff;
+    }
+
+    .swal-btn-confirm:hover {
+      filter: brightness(1.08);
+    }
+
+    .swal-btn-cancel {
+      background: var(--bg-surface-2);
+      color: var(--text-secondary);
+      border-color: var(--border);
+    }
+
+    .swal-btn-cancel:hover {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+    }
+
+    /* SweetAlert2-style Toast */
     .toast {
       position: fixed;
-      bottom: 1.25rem;
+      top: 1.15rem;
       right: 1.25rem;
       background: var(--bg-surface);
       color: var(--text-primary);
-      border: 1px solid var(--accent);
+      border: 1px solid var(--border);
       box-shadow: var(--shadow-md);
-      border-radius: var(--radius-sm);
-      padding: 0.75rem 1rem;
-      font-size: 0.84rem;
+      border-radius: 12px;
+      padding: 0.8rem 1.05rem;
+      font-size: 0.85rem;
       font-weight: 600;
-      z-index: 120;
+      z-index: 220;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      max-width: 380px;
+      overflow: hidden;
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(-12px) scale(0.96);
       pointer-events: none;
-      transition: all 0.2s ease;
+      transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .toast.show {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
+    }
+
+    .toast-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .toast.success .toast-dot { background: rgba(34, 197, 94, 0.16); color: #22c55e; }
+    .toast.error .toast-dot   { background: rgba(239, 68, 68, 0.16); color: #ef4444; }
+    .toast.warning .toast-dot { background: rgba(245, 158, 11, 0.16); color: #f59e0b; }
+    .toast.info .toast-dot    { background: rgba(56, 189, 248, 0.16); color: var(--accent); }
+
+    .toast-bar {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 3px;
+      width: 100%;
+      background: var(--accent);
+      transform-origin: left;
+    }
+
+    .toast.success .toast-bar { background: #22c55e; }
+    .toast.error .toast-bar   { background: #ef4444; }
+    .toast.warning .toast-bar { background: #f59e0b; }
+
+    .toast.show .toast-bar {
+      animation: toastProgress 3s linear forwards;
+    }
+
+    @keyframes toastProgress {
+      from { transform: scaleX(1); }
+      to   { transform: scaleX(0); }
     }
 
     /* Footer */
@@ -1375,7 +1585,24 @@
     </div>
   </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <!-- SWEETALERT2-STYLE MODAL -->
+  <div class="swal-backdrop" id="swal-backdrop" role="alertdialog" aria-modal="true" aria-labelledby="swal-title" aria-describedby="swal-text">
+    <div class="swal-card">
+      <div class="swal-icon-wrap warning" id="swal-icon"></div>
+      <h3 class="swal-title" id="swal-title"></h3>
+      <p class="swal-text" id="swal-text"></p>
+      <div class="swal-actions">
+        <button type="button" class="swal-btn swal-btn-confirm" id="swal-confirm">Aceptar</button>
+        <button type="button" class="swal-btn swal-btn-cancel" id="swal-cancel" style="display:none;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast success" id="toast" role="status" aria-live="polite">
+    <span class="toast-dot" id="toast-dot">✓</span>
+    <span id="toast-msg"></span>
+    <div class="toast-bar"></div>
+  </div>
 
   <script>
     (() => {
@@ -1625,12 +1852,88 @@
           .replace(/'/g, "&#39;");
       }
 
-      function showToast(msg) {
+      // SweetAlert2-style Native Engine (0 dependencias externas)
+      const SWAL_ICONS = {
+        warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><circle cx="12" cy="16.5" r="0.9" fill="currentColor"/></svg>`,
+        error: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8L8 16M8 8l8 8"/></svg>`,
+        success: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4.5 4.5L19 7.5"/></svg>`,
+        info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v6"/><circle cx="12" cy="7.5" r="0.9" fill="currentColor"/></svg>`,
+        question: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 2.2-2.4 3.7"/><circle cx="12" cy="17" r="0.9" fill="currentColor"/></svg>`
+      };
+
+      const Swal = {
+        _resolver: null,
+        fire({
+          icon = "info",
+          title = "",
+          text = "",
+          showCancelButton = false,
+          confirmButtonText = "Aceptar",
+          cancelButtonText = "Cancelar",
+          confirmStyle = ""
+        } = {}) {
+          return new Promise(resolve => {
+            const backdrop = document.getElementById("swal-backdrop");
+            const iconWrap = document.getElementById("swal-icon");
+            const titleEl = document.getElementById("swal-title");
+            const textEl = document.getElementById("swal-text");
+            const btnConfirm = document.getElementById("swal-confirm");
+            const btnCancel = document.getElementById("swal-cancel");
+
+            iconWrap.className = `swal-icon-wrap ${icon}`;
+            iconWrap.innerHTML = SWAL_ICONS[icon] || SWAL_ICONS.info;
+            titleEl.textContent = title;
+            textEl.textContent = text;
+
+            btnConfirm.textContent = confirmButtonText;
+            btnConfirm.className = `swal-btn swal-btn-confirm ${confirmStyle}`.trim();
+            btnCancel.textContent = cancelButtonText;
+            btnCancel.style.display = showCancelButton ? "inline-flex" : "none";
+
+            const cleanup = isConfirmed => {
+              backdrop.classList.remove("open");
+              btnConfirm.onclick = null;
+              btnCancel.onclick = null;
+              backdrop.onclick = null;
+              document.removeEventListener("keydown", onKey);
+              this._resolver = null;
+              resolve({ isConfirmed, isDismissed: !isConfirmed });
+            };
+
+            const onKey = e => {
+              if (e.key === "Escape") {
+                e.stopPropagation();
+                cleanup(false);
+              }
+            };
+
+            btnConfirm.onclick = () => cleanup(true);
+            btnCancel.onclick = () => cleanup(false);
+            backdrop.onclick = e => {
+              if (e.target === backdrop) cleanup(false);
+            };
+            document.addEventListener("keydown", onKey);
+
+            this._resolver = cleanup;
+            backdrop.classList.add("open");
+            btnConfirm.focus();
+          });
+        }
+      };
+
+      const TOAST_SYMBOLS = { success: "✓", error: "✕", warning: "!", info: "i" };
+
+      function showToast(msg, type = "success") {
         const el = document.getElementById("toast");
-        el.textContent = msg;
+        const dot = document.getElementById("toast-dot");
+        const msgEl = document.getElementById("toast-msg");
+        el.className = `toast ${type}`;
+        dot.textContent = TOAST_SYMBOLS[type] || "✓";
+        msgEl.textContent = msg;
+        void el.offsetWidth; // restart progress bar animation
         el.classList.add("show");
         clearTimeout(showToast._t);
-        showToast._t = setTimeout(() => el.classList.remove("show"), 2800);
+        showToast._t = setTimeout(() => el.classList.remove("show"), 3000);
       }
 
       function loadRisks() {
@@ -2231,13 +2534,28 @@
         });
         document.getElementById("btn-csv").addEventListener("click", exportCSV);
         document.getElementById("btn-print").addEventListener("click", () => window.print());
-        document.getElementById("btn-reset").addEventListener("click", () => {
-          if (confirm("¿Deseas restaurar los 6 hallazgos oficiales del caso CoopAndes Digital? Se perderán los cambios locales.")) {
+        document.getElementById("btn-reset").addEventListener("click", async () => {
+          const result = await Swal.fire({
+            icon: "warning",
+            title: "¿Restaurar caso CoopAndes Digital?",
+            text: "Se restaurarán los 6 hallazgos oficiales y se perderán los cambios guardados localmente.",
+            showCancelButton: true,
+            confirmButtonText: "Sí, restaurar",
+            cancelButtonText: "Cancelar",
+            confirmStyle: "warning"
+          });
+          if (result.isConfirmed) {
             risks = JSON.parse(JSON.stringify(DEFAULT_COOPANDES_RISKS));
             saveRisks();
             clearForm();
             renderAll();
-            showToast("Caso CoopAndes Digital restaurado (6 hallazgos).");
+            await Swal.fire({
+              icon: "success",
+              title: "Caso restaurado",
+              text: "Los 6 hallazgos oficiales de CoopAndes Digital han sido cargados nuevamente.",
+              confirmButtonText: "Entendido",
+              confirmStyle: "success"
+            });
           }
         });
 
@@ -2290,7 +2608,12 @@
           const id = document.getElementById("threat-catalog").value;
           const item = THREAT_CATALOG.find(c => c.id === id);
           if (!item) {
-            showToast("Selecciona primero una amenaza del catálogo ISO 27001:2022.");
+            Swal.fire({
+              icon: "info",
+              title: "Selecciona una amenaza",
+              text: "Primero elige una amenaza del catálogo ISO/IEC 27001:2022 para sugerir controles automáticamente.",
+              confirmButtonText: "Entendido"
+            });
             return;
           }
           document.getElementById("inp-env").value = item.env;
@@ -2301,7 +2624,7 @@
             document.getElementById("inp-vuln").value = item.vuln;
           }
           document.getElementById("inp-control").value = item.control;
-          showToast("Control ISO/IEC 27001:2022 aplicado al formulario.");
+          showToast("Control ISO/IEC 27001:2022 aplicado al formulario.", "info");
         });
 
         // Live preview on select changes
@@ -2348,9 +2671,15 @@
           check("f-control", controlVal.length > 0);
 
           if (!valid) {
-            showToast(isDuplicateId
-              ? `El ID "${idVal}" ya existe. Usa otro identificador.`
-              : "Completa todos los campos obligatorios (incluida la fuente del dato).");
+            Swal.fire({
+              icon: "error",
+              title: isDuplicateId ? "Identificador duplicado" : "Campos obligatorios incompletos",
+              text: isDuplicateId
+                ? `El ID "${idVal}" ya existe en la matriz. Utiliza otro identificador único.`
+                : "Completa todos los campos obligatorios, incluyendo la Fuente del dato para justificar el riesgo.",
+              confirmButtonText: "Revisar formulario",
+              confirmStyle: "danger"
+            });
             return;
           }
 
@@ -2403,7 +2732,7 @@
         });
 
         // Table row actions
-        document.getElementById("risk-tbody").addEventListener("click", e => {
+        document.getElementById("risk-tbody").addEventListener("click", async e => {
           const btn = e.target.closest("button[data-action]");
           if (!btn) return;
           const action = btn.getAttribute("data-action");
@@ -2414,12 +2743,24 @@
           } else if (action === "edit") {
             startEdit(id);
           } else if (action === "delete") {
-            if (confirm(`¿Eliminar el riesgo ${id} de la matriz?`)) {
+            const target = risks.find(r => r.id === id);
+            const result = await Swal.fire({
+              icon: "warning",
+              title: `¿Eliminar el riesgo ${id}?`,
+              text: target
+                ? `Se eliminará "${target.asset}" de la matriz de riesgos. Esta acción se puede revertir restaurando el caso base.`
+                : "Se eliminará este hallazgo de la matriz de riesgos.",
+              showCancelButton: true,
+              confirmButtonText: "Sí, eliminar",
+              cancelButtonText: "Cancelar",
+              confirmStyle: "danger"
+            });
+            if (result.isConfirmed) {
               risks = risks.filter(r => r.id !== id);
               saveRisks();
               if (editingId === id) clearForm();
               renderAll();
-              showToast(`Riesgo ${id} eliminado.`);
+              showToast(`Riesgo ${id} eliminado de la matriz.`, "success");
             }
           }
         });
