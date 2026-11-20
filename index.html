@@ -255,6 +255,49 @@
       color: var(--text-muted);
     }
 
+    /* Workspace / Multi-Organization Bar */
+    .org-bar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .org-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+
+    .org-bar-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .org-bar select {
+      width: auto;
+      min-width: 210px;
+      font-weight: 700;
+      padding: 0.42rem 0.7rem;
+    }
+
+    .org-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
     /* KPI Grid */
     .kpi-grid {
       display: grid;
@@ -1171,6 +1214,7 @@
         color: #000000 !important;
       }
       .topbar .toolbar,
+      .org-bar-actions,
       #form-section,
       .filters-bar,
       .row-actions,
@@ -1217,7 +1261,7 @@
         <div>
           <div class="brand-title">
             AndesShield
-            <span class="brand-tag">CoopAndes Digital</span>
+            <span class="brand-tag" id="brand-org-tag">CoopAndes Digital</span>
           </div>
           <div class="brand-sub">Sistema de Matriz de Riesgos de Ciberseguridad · ISO/IEC 27001:2022 · Ley 21.663</div>
         </div>
@@ -1235,6 +1279,23 @@
   </header>
 
   <main class="container">
+    <!-- MULTI-ORGANIZATION WORKSPACE BAR -->
+    <section class="org-bar" aria-label="Selector de organización">
+      <div class="org-bar-left">
+        <span class="org-bar-label">Organización activa:</span>
+        <select id="org-selector" aria-label="Cambiar de empresa u organización"></select>
+        <span class="badge-env" id="org-sector-badge">Cooperativa / Financiero</span>
+      </div>
+      <div class="org-bar-actions no-print">
+        <button type="button" class="btn-primary btn-sm" id="btn-new-org" title="Crear una matriz independiente para otra empresa">+ Nueva Empresa</button>
+        <button type="button" class="btn-sm" id="btn-rename-org" title="Editar nombre o rubro de la organización actual">Renombrar</button>
+        <button type="button" class="btn-sm btn-danger" id="btn-delete-org" title="Eliminar la organización actual">Eliminar</button>
+        <button type="button" class="btn-sm" id="btn-export-json" title="Descargar respaldo portátil en formato JSON">Exportar JSON</button>
+        <button type="button" class="btn-sm" id="btn-import-json" title="Cargar matriz desde un archivo JSON">Importar JSON</button>
+        <input type="file" id="inp-import-json" accept="application/json,.json" style="display:none;" />
+      </div>
+    </section>
+
     <!-- KPIs -->
     <section class="kpi-grid" aria-label="Indicadores clave de riesgo">
       <div class="kpi-card" style="--kpi-color: var(--accent)">
@@ -1458,7 +1519,7 @@
     <section class="card">
       <div class="card-header">
         <div>
-          <h2 class="card-title">Registro Priorizado de Riesgos — CoopAndes Digital</h2>
+          <h2 class="card-title" id="table-org-title">Registro Priorizado de Riesgos — CoopAndes Digital</h2>
           <p class="card-subtitle">Ordenado de mayor a menor riesgo inherente. Haz clic en los encabezados para reordenar.</p>
         </div>
         <span class="badge badge-env" id="table-count">0 registros</span>
@@ -1585,6 +1646,31 @@
     </div>
   </div>
 
+  <!-- MODAL: NUEVA / EDITAR ORGANIZACIÓN -->
+  <div class="modal-backdrop" id="modal-org" role="dialog" aria-modal="true" aria-labelledby="modal-org-title">
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-header">
+        <h3 id="modal-org-title">Nueva Organización</h3>
+        <button type="button" class="btn-sm" data-close-modal="modal-org">Cerrar ✕</button>
+      </div>
+      <form id="org-form" novalidate style="display:flex; flex-direction:column; gap:0.9rem;">
+        <div class="field" id="f-org-name">
+          <label for="inp-org-name">Nombre de la empresa u organización <span class="req">*</span></label>
+          <input type="text" id="inp-org-name" placeholder="Ej: Clínica del Norte, Constructora Andes..." required maxlength="60" />
+          <span class="field-error">Ingresa un nombre válido para la organización.</span>
+        </div>
+        <div class="field">
+          <label for="inp-org-sector">Rubro / Sector</label>
+          <input type="text" id="inp-org-sector" placeholder="Ej: Salud, Retail, Educación, Banca, Minería..." maxlength="60" />
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.6rem; margin-top:0.25rem;">
+          <button type="button" data-close-modal="modal-org">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btn-save-org">Crear Espacio</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- SWEETALERT2-STYLE MODAL -->
   <div class="swal-backdrop" id="swal-backdrop" role="alertdialog" aria-modal="true" aria-labelledby="swal-title" aria-describedby="swal-text">
     <div class="swal-card">
@@ -1608,7 +1694,9 @@
     (() => {
       "use strict";
 
-      const STORAGE_KEY = "andesshield_coopandes_risks_v1";
+      const LEGACY_STORAGE_KEY = "andesshield_coopandes_risks_v1";
+      const WORKSPACE_STORAGE_KEY = "andesshield_workspaces_v2";
+      const DEFAULT_ORG_ID = "org-coopandes";
       const THEME_KEY = "andesshield_theme_v1";
 
       const PROB_LABELS = {
@@ -1786,9 +1874,11 @@
         { p: 1, i: 5, expectedScore: 5,  expectedLevel: "Bajo" }
       ];
 
-      // Estado de la aplicación
+      // Estado de la aplicación (Multi-Organización)
+      let workspaceState = null;
       let risks = [];
       let editingId = null;
+      let orgModalMode = "create"; // create | rename
       let heatmapMode = "inherent"; // inherent | residual | dual
       let donutMode = "inherent";   // inherent | residual
       let sortState = { key: "inherent", dir: "desc" };
@@ -1936,26 +2026,191 @@
         showToast._t = setTimeout(() => el.classList.remove("show"), 3000);
       }
 
-      function loadRisks() {
+      function slugify(text) {
+        return String(text || "organizacion")
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "_")
+          .replace(/^_+|_+$/g, "") || "organizacion";
+      }
+
+      function createDefaultWorkspace() {
+        let initialCoopRisks = JSON.parse(JSON.stringify(DEFAULT_COOPANDES_RISKS));
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
+          const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+          if (legacyRaw) {
+            const parsedLegacy = JSON.parse(legacyRaw);
+            if (Array.isArray(parsedLegacy) && parsedLegacy.length > 0) {
+              initialCoopRisks = parsedLegacy;
+            }
+          }
+        } catch (e) {
+          console.warn("No se pudo migrar almacenamiento v1:", e);
+        }
+        return {
+          activeOrgId: DEFAULT_ORG_ID,
+          orgs: [
+            {
+              id: DEFAULT_ORG_ID,
+              name: "CoopAndes Digital",
+              sector: "Cooperativa / Financiero",
+              isDefault: true,
+              risks: initialCoopRisks
+            }
+          ]
+        };
+      }
+
+      function loadWorkspaces() {
+        try {
+          const raw = localStorage.getItem(WORKSPACE_STORAGE_KEY);
           if (raw) {
             const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length > 0) {
+            if (parsed && Array.isArray(parsed.orgs) && parsed.orgs.length > 0) {
+              if (!parsed.orgs.some(o => o.id === parsed.activeOrgId)) {
+                parsed.activeOrgId = parsed.orgs[0].id;
+              }
               return parsed;
             }
           }
         } catch (e) {
-          console.warn("No se pudo leer localStorage:", e);
+          console.warn("No se pudo leer workspaces:", e);
         }
-        return JSON.parse(JSON.stringify(DEFAULT_COOPANDES_RISKS));
+        return createDefaultWorkspace();
+      }
+
+      function getActiveOrg() {
+        return workspaceState.orgs.find(o => o.id === workspaceState.activeOrgId) || workspaceState.orgs[0];
       }
 
       function saveRisks() {
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(risks));
+          const org = getActiveOrg();
+          if (org) org.risks = risks;
+          localStorage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(workspaceState));
         } catch (e) {
           console.warn("No se pudo guardar en localStorage:", e);
+        }
+      }
+
+      function renderOrgBar() {
+        const sel = document.getElementById("org-selector");
+        const active = getActiveOrg();
+        sel.innerHTML = workspaceState.orgs.map(o =>
+          `<option value="${escapeHtml(o.id)}"${o.id === active.id ? " selected" : ""}>${escapeHtml(o.name)} (${o.risks.length})</option>`
+        ).join("");
+
+        document.getElementById("org-sector-badge").textContent = active.sector || "General";
+        document.getElementById("brand-org-tag").textContent = active.name;
+        document.getElementById("table-org-title").textContent = `Registro Priorizado de Riesgos — ${active.name}`;
+        document.title = `AndesShield | Matriz de Riesgos — ${active.name}`;
+
+        const delBtn = document.getElementById("btn-delete-org");
+        delBtn.style.opacity = active.isDefault ? "0.55" : "1";
+        delBtn.title = active.isDefault
+          ? "CoopAndes Digital es el caso base de referencia"
+          : `Eliminar organización ${active.name}`;
+
+        const resetBtn = document.getElementById("btn-reset");
+        resetBtn.textContent = active.isDefault ? "Restaurar Caso" : "Limpiar Matriz";
+        resetBtn.title = active.isDefault
+          ? "Restaurar los 6 hallazgos oficiales de CoopAndes Digital"
+          : `Vaciar todos los hallazgos de ${active.name}`;
+      }
+
+      function switchOrg(orgId) {
+        const target = workspaceState.orgs.find(o => o.id === orgId);
+        if (!target) return;
+        workspaceState.activeOrgId = target.id;
+        risks = target.risks;
+        saveRisks();
+        document.getElementById("filter-search").value = "";
+        document.getElementById("filter-level").value = "ALL";
+        document.getElementById("filter-env").value = "ALL";
+        clearForm();
+        renderAll();
+        showToast(`Organización activa: ${target.name}`, "info");
+      }
+
+      function exportJSON() {
+        const active = getActiveOrg();
+        const payload = {
+          app: "AndesShield",
+          version: 2,
+          exportedAt: new Date().toISOString(),
+          organization: {
+            name: active.name,
+            sector: active.sector || "General"
+          },
+          risks
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${slugify(active.name)}_matriz_riesgos.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`Respaldo JSON exportado para ${active.name}.`, "success");
+      }
+
+      async function importJSONFile(file) {
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          const importedRisks = Array.isArray(parsed) ? parsed : parsed?.risks;
+          if (!Array.isArray(importedRisks)) {
+            throw new Error("El archivo JSON no contiene un listado válido de riesgos.");
+          }
+          const sanitized = importedRisks.map((r, idx) => ({
+            id: String(r.id || `R-${String(idx + 1).padStart(2, "0")}`).trim().toUpperCase(),
+            asset: String(r.asset || "Activo sin nombre").trim(),
+            env: ["Cloud", "On-Premise", "Híbrido"].includes(r.env) ? r.env : "Cloud",
+            threat: String(r.threat || "Amenaza no especificada").trim(),
+            vuln: String(r.vuln || "Vulnerabilidad no especificada").trim(),
+            p: Math.min(5, Math.max(1, Number(r.p) || 3)),
+            i: Math.min(5, Math.max(1, Number(r.i) || 3)),
+            source: String(r.source || "Importado desde respaldo JSON").trim(),
+            control: String(r.control || "Control por definir").trim(),
+            pr: Math.min(5, Math.max(1, Number(r.pr) || 1)),
+            ir: Math.min(5, Math.max(1, Number(r.ir) || 2))
+          }));
+
+          const orgName = String(parsed?.organization?.name || file.name.replace(/\.json$/i, "")).trim() || "Organización Importada";
+          const orgSector = String(parsed?.organization?.sector || "General").trim() || "General";
+
+          const newOrg = {
+            id: "org-" + Date.now(),
+            name: orgName,
+            sector: orgSector,
+            isDefault: false,
+            risks: sanitized
+          };
+          workspaceState.orgs.push(newOrg);
+          workspaceState.activeOrgId = newOrg.id;
+          risks = newOrg.risks;
+          saveRisks();
+          clearForm();
+          renderAll();
+
+          await Swal.fire({
+            icon: "success",
+            title: "Matriz importada correctamente",
+            text: `Se creó el espacio "${newOrg.name}" con ${sanitized.length} hallazgo(s) cargados.`,
+            confirmButtonText: "Abrir matriz",
+            confirmStyle: "success"
+          });
+        } catch (err) {
+          await Swal.fire({
+            icon: "error",
+            title: "Error al importar JSON",
+            text: err.message || "Verifica que el archivo sea un respaldo válido generado por AndesShield.",
+            confirmButtonText: "Entendido",
+            confirmStyle: "danger"
+          });
         }
       }
 
@@ -2448,8 +2703,9 @@
 
       // CSV Export (UTF-8 BOM for Excel)
       function exportCSV() {
+        const active = getActiveOrg();
         const headers = [
-          "ID", "Activo", "Entorno", "Amenaza", "Vulnerabilidad", "Fuente del Dato",
+          "Organización", "ID", "Activo", "Entorno", "Amenaza", "Vulnerabilidad", "Fuente del Dato",
           "P Inherente", "I Inherente", "R Inherente", "Nivel Inherente", "Acción Inherente",
           "Control Propuesto", "P Residual", "I Residual", "R Residual", "Nivel Residual",
           "Acción Residual", "Reducción (pts)", "Reducción (%)"
@@ -2465,7 +2721,7 @@
           const diff = inh.score - res.score;
           const pct = inh.score > 0 ? Math.round((diff / inh.score) * 100) : 0;
           lines.push([
-            r.id, r.asset, r.env || "Cloud", r.threat, r.vuln, r.source,
+            active.name, r.id, r.asset, r.env || "Cloud", r.threat, r.vuln, r.source,
             r.p, r.i, inh.score, inh.level, inh.action,
             r.control, r.pr, r.ir, res.score, res.level, res.action, diff, `${pct}%`
           ].map(csvEscape).join(";"));
@@ -2475,12 +2731,12 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "matriz_riesgos_coopandes_digital.csv";
+        a.download = `matriz_riesgos_${slugify(active.name)}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showToast("Archivo CSV exportado correctamente.");
+        showToast(`Archivo CSV exportado para ${active.name}.`, "success");
       }
 
       function openModal(id) {
@@ -2492,6 +2748,7 @@
       }
 
       function renderAll() {
+        renderOrgBar();
         renderKPIs();
         renderHeatmaps();
         renderDonut();
@@ -2534,28 +2791,163 @@
         });
         document.getElementById("btn-csv").addEventListener("click", exportCSV);
         document.getElementById("btn-print").addEventListener("click", () => window.print());
-        document.getElementById("btn-reset").addEventListener("click", async () => {
-          const result = await Swal.fire({
-            icon: "warning",
-            title: "¿Restaurar caso CoopAndes Digital?",
-            text: "Se restaurarán los 6 hallazgos oficiales y se perderán los cambios guardados localmente.",
-            showCancelButton: true,
-            confirmButtonText: "Sí, restaurar",
-            cancelButtonText: "Cancelar",
-            confirmStyle: "warning"
-          });
-          if (result.isConfirmed) {
-            risks = JSON.parse(JSON.stringify(DEFAULT_COOPANDES_RISKS));
+        // Multi-Organization controls
+        document.getElementById("org-selector").addEventListener("change", e => {
+          switchOrg(e.target.value);
+        });
+
+        document.getElementById("btn-new-org").addEventListener("click", () => {
+          orgModalMode = "create";
+          document.getElementById("modal-org-title").textContent = "Nueva Organización";
+          document.getElementById("btn-save-org").textContent = "Crear Espacio";
+          document.getElementById("inp-org-name").value = "";
+          document.getElementById("inp-org-sector").value = "";
+          document.getElementById("f-org-name").classList.remove("invalid");
+          openModal("modal-org");
+          setTimeout(() => document.getElementById("inp-org-name").focus(), 40);
+        });
+
+        document.getElementById("btn-rename-org").addEventListener("click", () => {
+          const active = getActiveOrg();
+          orgModalMode = "rename";
+          document.getElementById("modal-org-title").textContent = "Editar Organización";
+          document.getElementById("btn-save-org").textContent = "Guardar Cambios";
+          document.getElementById("inp-org-name").value = active.name;
+          document.getElementById("inp-org-sector").value = active.sector || "";
+          document.getElementById("f-org-name").classList.remove("invalid");
+          openModal("modal-org");
+          setTimeout(() => document.getElementById("inp-org-name").focus(), 40);
+        });
+
+        document.getElementById("org-form").addEventListener("submit", e => {
+          e.preventDefault();
+          const nameVal = document.getElementById("inp-org-name").value.trim();
+          const sectorVal = document.getElementById("inp-org-sector").value.trim() || "General";
+          const fieldWrap = document.getElementById("f-org-name");
+
+          if (!nameVal) {
+            fieldWrap.classList.add("invalid");
+            return;
+          }
+          fieldWrap.classList.remove("invalid");
+
+          if (orgModalMode === "rename") {
+            const active = getActiveOrg();
+            active.name = nameVal;
+            active.sector = sectorVal;
+            saveRisks();
+            renderAll();
+            closeModal("modal-org");
+            showToast(`Organización actualizada: ${nameVal}`, "success");
+          } else {
+            const newOrg = {
+              id: "org-" + Date.now(),
+              name: nameVal,
+              sector: sectorVal,
+              isDefault: false,
+              risks: []
+            };
+            workspaceState.orgs.push(newOrg);
+            workspaceState.activeOrgId = newOrg.id;
+            risks = newOrg.risks;
             saveRisks();
             clearForm();
             renderAll();
-            await Swal.fire({
+            closeModal("modal-org");
+            Swal.fire({
               icon: "success",
-              title: "Caso restaurado",
-              text: "Los 6 hallazgos oficiales de CoopAndes Digital han sido cargados nuevamente.",
-              confirmButtonText: "Entendido",
+              title: `Espacio creado: ${nameVal}`,
+              text: "Ya puedes registrar los hallazgos de ciberseguridad para esta organización de forma independiente.",
+              confirmButtonText: "Comenzar",
               confirmStyle: "success"
             });
+          }
+        });
+
+        document.getElementById("btn-delete-org").addEventListener("click", async () => {
+          const active = getActiveOrg();
+          if (active.isDefault) {
+            await Swal.fire({
+              icon: "info",
+              title: "Organización base protegida",
+              text: "CoopAndes Digital es el caso de referencia de la actividad y no se elimina. Si modificaste sus hallazgos, usa el botón \"Restaurar Caso\".",
+              confirmButtonText: "Entendido"
+            });
+            return;
+          }
+          const result = await Swal.fire({
+            icon: "warning",
+            title: `¿Eliminar "${active.name}"?`,
+            text: `Se eliminará esta organización junto con sus ${active.risks.length} hallazgo(s) registrados.`,
+            showCancelButton: true,
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar",
+            confirmStyle: "danger"
+          });
+          if (result.isConfirmed) {
+            workspaceState.orgs = workspaceState.orgs.filter(o => o.id !== active.id);
+            workspaceState.activeOrgId = workspaceState.orgs[0].id;
+            risks = workspaceState.orgs[0].risks;
+            saveRisks();
+            clearForm();
+            renderAll();
+            showToast(`Organización "${active.name}" eliminada.`, "success");
+          }
+        });
+
+        document.getElementById("btn-export-json").addEventListener("click", exportJSON);
+        document.getElementById("btn-import-json").addEventListener("click", () => {
+          const inp = document.getElementById("inp-import-json");
+          inp.value = "";
+          inp.click();
+        });
+        document.getElementById("inp-import-json").addEventListener("change", e => {
+          const file = e.target.files?.[0];
+          if (file) importJSONFile(file);
+        });
+
+        document.getElementById("btn-reset").addEventListener("click", async () => {
+          const active = getActiveOrg();
+          if (active.isDefault) {
+            const result = await Swal.fire({
+              icon: "warning",
+              title: "¿Restaurar caso CoopAndes Digital?",
+              text: "Se restaurarán los 6 hallazgos oficiales y se perderán los cambios guardados localmente en esta organización.",
+              showCancelButton: true,
+              confirmButtonText: "Sí, restaurar",
+              cancelButtonText: "Cancelar",
+              confirmStyle: "warning"
+            });
+            if (result.isConfirmed) {
+              risks = JSON.parse(JSON.stringify(DEFAULT_COOPANDES_RISKS));
+              saveRisks();
+              clearForm();
+              renderAll();
+              await Swal.fire({
+                icon: "success",
+                title: "Caso restaurado",
+                text: "Los 6 hallazgos oficiales de CoopAndes Digital han sido cargados nuevamente.",
+                confirmButtonText: "Entendido",
+                confirmStyle: "success"
+              });
+            }
+          } else {
+            const result = await Swal.fire({
+              icon: "warning",
+              title: `¿Limpiar matriz de "${active.name}"?`,
+              text: "Se eliminarán todos los hallazgos registrados en esta organización.",
+              showCancelButton: true,
+              confirmButtonText: "Sí, limpiar",
+              cancelButtonText: "Cancelar",
+              confirmStyle: "danger"
+            });
+            if (result.isConfirmed) {
+              risks = [];
+              saveRisks();
+              clearForm();
+              renderAll();
+              showToast(`Matriz de ${active.name} vaciada.`, "success");
+            }
           }
         });
 
@@ -2769,7 +3161,9 @@
       // Bootstrap
       initTheme();
       initCatalog();
-      risks = loadRisks();
+      workspaceState = loadWorkspaces();
+      risks = getActiveOrg().risks;
+      saveRisks();
       bindEvents();
       clearForm();
       renderAll();

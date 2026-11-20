@@ -61,8 +61,10 @@ Para diferenciar la solución se incorporaron las siguientes mejoras propias (10
 3. **Matriz de Calor 5×5 Interactiva con Vista Dual:** Permite alternar entre *Riesgo Inherente*, *Riesgo Residual* y *Antes vs. Después* lado a lado. Al hacer clic en cualquier ID (`R-01`..`R-06`) se abre un modal con el desglose completo.
 4. **Catálogo de Amenazas con Sugerencia Automática ISO/IEC 27001:2022:** Selector predefinido de amenazas cloud y on-premise que sugiere controles técnicos/normativos alineados a ISO/IEC 27001:2022, CIS AWS Benchmark y legislación chilena (Ley 21.663 y Ley 21.719).
 5. **Filtros Avanzados, Búsqueda y Ordenamiento Dinámico:** Búsqueda en tiempo real, filtros por nivel de riesgo y entorno (`Cloud` / `On-Premise` / `Híbrido`) y ordenamiento interactivo por columnas.
-6. **Persistencia, Exportación CSV e Impresión PDF:** Guardado automático en `localStorage`, botón para restaurar el caso base de CoopAndes Digital, exportación a **CSV con BOM UTF-8** (compatible con Excel) y estilos `@media print` optimizados para exportar a PDF.
+6. **Persistencia, Exportación CSV/JSON e Impresión PDF:** Guardado automático en `localStorage`, exportación a **CSV con BOM UTF-8** (compatible con Excel), exportación e importación de **respaldos portátiles JSON** por empresa y estilos `@media print` optimizados para exportar a PDF.
 7. **Módulo Integrado de Validación QA:** Botón **Validación QA** en la barra superior que ejecuta en vivo los 5 casos de prueba exigidos por la rúbrica.
+8. **Soporte Multi-Organización (Multi-Empresa):** Barra superior para crear, renombrar, eliminar y alternar entre múltiples empresas independientes (manteniendo **CoopAndes Digital** como caso base precargado por defecto).
+9. **Alertas y Diálogos Estilo SweetAlert2 Nativos:** Motor propio de diálogos de confirmación y notificaciones *toast* con íconos SVG animados, sin librerías externas.
 
 ---
 
