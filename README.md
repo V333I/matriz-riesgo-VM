@@ -65,6 +65,17 @@ La aplicación incluye precargado un escenario de referencia de arquitectura hí
 
 ---
 
+## Seguridad y Endurecimiento (OWASP)
+
+La aplicación aplica defensa en profundidad tanto a nivel de código como de cabeceras HTTP en Cloudflare Pages (`_headers`):
+
+- **Cabeceras de Seguridad HTTP (`_headers`):** `Content-Security-Policy` estricta (`default-src 'none'; connect-src 'none'; object-src 'none'; frame-ancestors 'none'`), `X-Frame-Options: DENY` (anti-Clickjacking), `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, `HSTS` con `preload`, `COOP` y `CORP`.
+- **Prevención de XSS:** Escapado estricto de salidas HTML (`escapeHtml`) y uso de `.textContent`; cero uso de `eval()`, `document.write()` ni scripts de terceros.
+- **Protección contra CSV / Formula Injection (`CWE-1236`):** Neutralización automática de celdas que comienzan con `=`, `+`, `-`, `@`, tabulaciones o saltos de línea al exportar hacia Excel.
+- **Validación estricta en Importación JSON y Persistencia:** Límites contra DoS de cliente (2 MB por archivo, 500 hallazgos por empresa, 30 organizaciones), sanitización de esquema por lista blanca (mitigación de *Prototype Pollution*), redondeo seguro de puntajes (`1–5`) y control de cuota `QuotaExceededError`.
+
+---
+
 ## Uso y Despliegue
 
 ### Ejecución local
